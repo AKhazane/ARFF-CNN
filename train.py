@@ -3,21 +3,27 @@ import numpy as np
 from keras.optimizers import *
 from keras.models import *
 from keras.utils.training_utils import multi_gpu_model
-from keras.callbacks import ModelCheckpoint, Callback, CSVLogger
+from keras.callbacks import ModelCheckpoint
 from keras.utils.training_utils import multi_gpu_model
 
 from unet import myUnet
 from data_loader import *
 from data_generator import DataGenerator
+import pdb
+import tensorflow as tf
 
+tf.app.flags.DEFINE_integer('num_gpus', 2,
+                            """How many GPUs to use.""")
 
+CUDA_VISIBLE_DEVICES=0,1
 
 def train_zhi_unet(slice_type='side', dim = (256,256), epochs=2):        
     print('-------- Instantiating Zhi Unet for ', slice_type, dim, '---------------')
     # Model prefix string for organized persistance
+#    pdb.set_trace()
     model_prefix = 'zhi_unet_' + slice_type
-    train_dir = ('./slice_data_' + slice_type)
-    weights_fp = ('./weights/' + model_prefix + '.hdf5')
+    train_dir = 'slice_data'
+    weights_fp = ('weights/' + model_prefix + '.hdf5')
     # Loading Data
     print('Loading Data...')
     partition={}
@@ -26,20 +32,21 @@ def train_zhi_unet(slice_type='side', dim = (256,256), epochs=2):
     partition['x_val'],
     partition['y_val'],
     partition['x_test'],
-    partition['y_test'])  = load_data(train_dir, split=(80, 10, 10))
+    partition['y_test'])  = load_data(train_dir, split=(90, 10, 0))
     
+    print(len(partition['x_train']), len(partition['y_train']), len(partition['x_val']), len( partition['y_val']), len( partition['x_test']), len( partition['y_test']))
     # Save x_val to text file
     #x_val_fn = ('./val_logs/val_' + slice_type + '.txt')
     #np.savetxt(x_val_fn, np.array(partition['x_val']), delimiter=',', fmt="%s")
     
     # Parameters for input data
     params1 = {'dim': dim,
-              'batch_size': 32,
+              'batch_size': 20,
               'n_channels': 1,
               'shuffle': True}
     
     params2 = {'dim': dim,
-          'batch_size': 16,
+          'batch_size': 1,
           'n_channels': 1,
           'shuffle': False}
     training_generator = DataGenerator(partition['x_train'], partition['y_train'], **params1)
@@ -56,21 +63,22 @@ def train_zhi_unet(slice_type='side', dim = (256,256), epochs=2):
     #model.load_weights(weights_fp)
     #multi_model = multi_gpu_model(model, gpus=2)
     #multi_model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy','mse'])
-    model_fp = ('./models/' + model_prefix + '.hdf5')
-    model_checkpoint = ModelCheckpoint(model_fp, monitor='loss',verbose=1,
-                                       save_best_only=True)
+    #print(multi_model.summary()) 
+    model_fp = ('models/' + model_prefix + '.hdf5')
+    #model_checkpoint = ModelCheckpoint(model_fp, monitor='loss',verbose=1,
+    #                                   save_best_only=True)
     #print(multi_model.summary())
 
     # Train UNet
     print('Fitting Model...')
-    log_fp = ('./logs/' + model_prefix + '2.csv')
-    csv_logger = CSVLogger(log_fp, append=True, separator=';')
+   # log_fp = ('./logs/' + model_prefix + '2.csv')
+   # csv_logger = CSVLogger(log_fp, append=True, separator=';')
     model.fit_generator(generator=training_generator,
             validation_data=validation_generator,
             validation_steps = 1,
             epochs=epochs,
             verbose=1,
-            callbacks =[model_checkpoint, csv_logger],
+           # callbacks =[model_checkpoint],
             use_multiprocessing=True,
             workers=6)
     
