@@ -1,16 +1,20 @@
+import os 
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
 import unet
 from keras import backend as K
 from keras.models import *
 from data_loader import *
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
-from data_generation import DataGenerator, resize_image
+from data_generation import DataGenerator
 import nibabel as nib
 import pdb 
 import tensorflow as tf
-import os
 from metrics import dice_coefficient
 import argparse
 import time
+# Use CPU
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--evaluate', default=False, action='store_true') 
@@ -34,9 +38,11 @@ def save_prediction(file_names, predictions):
 
 
 
-def speed_test(model):
-
-	model = load_model('unet_regres.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
+def speed_test(checkpoint_file='unet_3d_bse.hdf5'):
+	print(checkpoint_file)
+	print('Setting up speed test...')
+	partition = {}
+	model = load_model(checkpoint_file, custom_objects={'dice_coefficient': dice_coefficient}) 
 
 	(_,
 	    _,
@@ -57,26 +63,34 @@ def speed_test(model):
 
 	testing_generator = DataGenerator(partition['x_test'], partition['y_test'], **params)
 	avg_time = [] 
+#	pdb.set_trace()
+	print('Starting test.') 
 	for index, filename in enumerate(testing_generator):
 		x_batch, _ = testing_generator[index]
+		if index >= len(testing_generator.list_IDs):
+			break
 		file = testing_generator.list_IDs[index]
+		#print('Predicting', file)
+		#norm_image = nib.load(file.replace('test_set_mri/', 'data/')).get_data()
+		#norm_image = np.swapaxes(testing_generator.resize_image(np.swapaxes(norm_image, 0, -1)), 0, -1)
 		print('Predicting', file)
-		norm_image = nib.load(file.replace('test_set_mri/', 'data/')).get_data()
-		norm_image = np.swapaxes(resize_image(np.swapaxes(norm_image, 0, -1)), 0, -1)
-		start = start.time()
-		predicted_mask = model.predict_on_batch(x=x_batch)
-		predicted_mask = np.squeeze(predicted_mask)
+		start = time.time()
+		predicted_img = model.predict_on_batch(x=x_batch)
+		end = time.time() 
+		avg_time.append(end - start)
+		#predicted_mask = np.squeeze(predicted_mask)
 		# alternative_mask = predicted_mask.copy() 
-		less_indices = predicted_mask < 0.5
-		higher_indics = predicted_mask >= 0.5
-		predicted_mask[less_indices] = 0
-		predicted_mask[higher_indics] = 1
-		predicted_mask = np.swapaxes(predicted_mask, 0, -1) 
+		#less_indices = predicted_mask < 0.5
+		#higher_indics = predicted_mask >= 0.5
+		#predicted_mask[less_indices] = 0
+		#predicted_mask[higher_indics] = 1
+		#predicted_mask = np.swapaxes(predicted_mask, 0, -1) 
 #         print(norm_data.shape, alternative_mask.shape)
-		norm_output = predicted_mask * norm_image
-		end = time.time()
-		avg_time.append((end - start))
-	print(np.mean(avg_time))
+		#norm_output = predicted_mask * norm_image
+		#end = time.time()
+		#avg_time.append((end - start))
+		print(end - start)
+	print('Average prediction speed(s):', np.mean(avg_time))
 
 
 
@@ -104,7 +118,7 @@ def evaluate():
 	    _,
 	    _)  = load_data('test_set_mri', split=(0,100,0), DEBUG=True, third_dimension=True)
 
- 	print('Number of images to mask', len(partition['x_val']))
+	print('Number of images to mask', len(partition['x_val']))
 	params = {
 		'dim': (160,256,256),
         	'batch_size': 1,
@@ -184,5 +198,7 @@ if __name__ == '__main__':
 		evaluate() 
 	elif args.restore:
 		train(True) 
+	elif args.speed_test:
+		speed_test('unet_regres_best.hdfs')
 	else:
 		train() 

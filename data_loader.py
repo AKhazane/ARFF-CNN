@@ -14,11 +14,9 @@ def load_data(data_directory, split, DEBUG=False, third_dimension=False):
     Split should be a tuple of three percentages (Train%, Dev%, Test%) """ 
 
     if not os.path.isdir(data_directory):
-        raise Exception('Data directory not found.')
-    if third_dimension:
-        total_files = get_file_list_from_dir(data_directory, y_label='_defaced') 
+        total_files = get_file_list_from_dir('MRI_Images', 'masks') 
     else:
-        total_files = get_file_list_from_dir(data_directory, y_label='_mask')
+        total_files = load_from_data_directory(data_directory) 
     shuffle(total_files) 
     train_split, val_split, test_split = data_split(total_files, split)
 
@@ -30,7 +28,10 @@ def load_data(data_directory, split, DEBUG=False, third_dimension=False):
     y_test = [i[1] for i in test_split]
     return X_train, y_train, X_val, y_val, X_test, y_test
 
-def get_file_list_from_dir(datadir, y_label='_mask'):
+
+
+
+def load_from_data_directory(datadir, y_label='_mask'):
 	"""load data from the specified datadir"""
 	total_files = []
 	for _,_,files in os.walk(datadir):
@@ -40,6 +41,23 @@ def get_file_list_from_dir(datadir, y_label='_mask'):
 				defaced = file
 				total_files.append((datadir + '/' + non_defaced, datadir + '/' + defaced))
 	return total_files
+
+
+def get_file_list_from_dir(x_label_dir, y_label_dir, y_label='_mask'):
+	"""load data from the specified datadir""
+        MRI_Images = os.listdir(x_label_dir)
+        masks = os.listdir(y_label_dir)
+        total_files = []
+        if not os.path.exists('data'):
+            os.mkdir('data') 
+        for file in masks:
+            if y_label[1:] in file:
+                non_defaced = file.replace(y_label, '')
+                os.rename(x_label_dir + '/' + non_defaced, 'data/' + non_defaced)
+                os.rename(y_label_dir + '/' + file, 'data/' + file)
+                total_files.append(('data/' + non_defaced,  'data/' + file))
+        return total_files
+             
 
 
 
