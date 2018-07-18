@@ -40,7 +40,7 @@ def load_from_data_directory(datadir, y_label='_mask'):
 
 
 def get_file_list_from_dir(x_label_dir, y_label_dir, y_label='_mask'):
-	"""load data from the specified datadir"""
+    """load data from the specified datadir"""
     MRI_Images = os.listdir(x_label_dir)
     masks = os.listdir(y_label_dir)
     total_files = []
