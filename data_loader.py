@@ -13,14 +13,12 @@ def load_data(data_directory, split, DEBUG=False, third_dimension=False):
     """Load the data into train, dev, and test set with the specified split.
     Split should be a tuple of three percentages (Train%, Dev%, Test%) """
     pdb.set_trace()
-
     if not os.path.isdir(data_directory):
         total_files = get_file_list_from_dir('MRI_Images', 'masks') 
     else:
         total_files = load_from_data_directory(data_directory) 
     shuffle(total_files) 
     train_split, val_split, test_split = data_split(total_files, split)
-
     X_train = [i[0] for i in train_split]
     y_train = [i[1] for i in train_split]
     X_val = [i[0] for i in val_split]
@@ -66,9 +64,8 @@ def data_split(file_list, split):
     train, val, test = split
     train_end = train / 100
     val_end = train_end + (val / 100)
-    test_start = val_end 
+    test_start = val_end
     number_of_files = len(file_list)
-
     train_split = file_list[:int(train_end * number_of_files)]
     val_split = file_list[int(train_end * number_of_files):int(number_of_files*val_end)]
     test_split = file_list[int(number_of_files*test_start):]
