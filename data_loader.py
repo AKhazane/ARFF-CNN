@@ -27,19 +27,16 @@ def load_data(data_directory, split, DEBUG=False, third_dimension=False):
     y_test = [i[1] for i in test_split]
     return X_train, y_train, X_val, y_val, X_test, y_test
 
-
-
-
 def load_from_data_directory(datadir, y_label='_mask'):
-	"""load data from the specified datadir"""
-	total_files = []
-	for _,_,files in os.walk(datadir):
-		for file in files:
-			if y_label[1:] in file:
-				non_defaced = file.replace(y_label, '')
-				defaced = file
-				total_files.append((datadir + '/' + non_defaced, datadir + '/' + defaced))
-	return total_files
+    """load data from the specified datadir"""
+    total_files = []
+    for _,_,files in os.walk(datadir):
+        for file in files:
+            if y_label[1:] in file:
+                non_defaced = file.replace(y_label, '')
+                defaced = file
+                total_files.append((datadir + '/' + non_defaced, datadir + '/' + defaced))
+    return total_files
 
 
 def get_file_list_from_dir(x_label_dir, y_label_dir, y_label='_mask'):
