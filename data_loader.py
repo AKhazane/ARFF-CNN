@@ -45,19 +45,19 @@ def load_from_data_directory(datadir, y_label='_mask'):
 
 
 def get_file_list_from_dir(x_label_dir, y_label_dir, y_label='_mask'):
-	"""load data from the specified datadir""
-        MRI_Images = os.listdir(x_label_dir)
-        masks = os.listdir(y_label_dir)
-        total_files = []
-        if not os.path.exists('data'):
-            os.mkdir('data') 
-        for file in masks:
-            if y_label[1:] in file:
-                non_defaced = file.replace(y_label, '')
-                os.rename(x_label_dir + '/' + non_defaced, 'data/' + non_defaced)
-                os.rename(y_label_dir + '/' + file, 'data/' + file)
-                total_files.append(('data/' + non_defaced,  'data/' + file))
-        return total_files
+	"""load data from the specified datadir"""
+    MRI_Images = os.listdir(x_label_dir)
+    masks = os.listdir(y_label_dir)
+    total_files = []
+    if not os.path.exists('data'):
+        os.mkdir('data') 
+    for file in masks:
+        if y_label[1:] in file:
+            non_defaced = file.replace(y_label, '')
+            os.rename(x_label_dir + '/' + non_defaced, 'data/' + non_defaced)
+            os.rename(y_label_dir + '/' + file, 'data/' + file)
+            total_files.append(('data/' + non_defaced,  'data/' + file))
+    return total_files
              
 
 
