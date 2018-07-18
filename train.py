@@ -154,7 +154,7 @@ def train(restore=False):
     partition['x_val'],
     partition['y_val'],
     partition['x_test'],
-    partition['y_test'])  = load_data('data', split=(0,10,0), DEBUG=True, third_dimension=True)
+    partition['y_test'])  = load_data('data', split=(90,10,0), DEBUG=True, third_dimension=True)
 
 
 	params = {
@@ -165,7 +165,7 @@ def train(restore=False):
                     'third_dimension': True
              }
 
-	#training_generator = DataGenerator(partition['x_train'], partition['y_train'], **params)
+	training_generator = DataGenerator(partition['x_train'], partition['y_train'], **params)
 	validation_generator = DataGenerator(partition['x_val'], partition['y_val'], **params)
 #	testing_generator = DataGenerator(partition['x_test'], partition['y_test'], **params)
 	print('Loaded Data')
