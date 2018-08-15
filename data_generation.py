@@ -38,9 +38,12 @@ class DataGenerator(keras.utils.Sequence):
         return X, y
 
 
-    def resize_image(self, image):
+    def resize_image(self, image, mask=False):
         new_dims = tuple((image.shape[0] + (self.dim[0] - image.shape[0]), image.shape[1], image.shape[2]))
-        new_image = np.zeros(new_dims)
+        if mask:
+            new_image = np.ones(new_dims) # somewhat odd because a sliver of white will appear around the mask in the GT image 
+        else:
+            new_image = np.zeros(new_dims) 
         new_image[:image.shape[0], :image.shape[1], :image.shape[2]] = image 
         return new_image 
 
@@ -100,10 +103,10 @@ class DataGenerator(keras.utils.Sequence):
                 y_data = np.swapaxes(nib.load(list_ys_temp[i]).get_data().astype(np.float32), 0, -1)
                 if x_data.shape[0] < self.dim[0]:
                     x_data = self.resize_image(x_data) 
-                    y_data = self.resize_image(y_data)
+                    y_data = self.resize_image(y_data, mask=True)
 
                 #x_data = self.normalizeImg(x_data) 
-                y_data = self.getMaskData(x_data, y_data)
+                #y_data = self.getMaskData(x_data, y_data)
                 x_data = self.normalizeImg2(x_data)
                 
                 X[x_slice_idx,] = x_data

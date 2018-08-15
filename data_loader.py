@@ -12,7 +12,7 @@ import pdb
 def load_data(data_directory, split, DEBUG=False, third_dimension=False):
     """Load the data into train, dev, and test set with the specified split.
     Split should be a tuple of three percentages (Train%, Dev%, Test%) """
-    pdb.set_trace()
+    #pdb.set_trace()
     if not os.path.isdir(data_directory):
         total_files = get_file_list_from_dir('MRI_Images', 'masks') 
     else:
@@ -27,7 +27,7 @@ def load_data(data_directory, split, DEBUG=False, third_dimension=False):
     y_test = [i[1] for i in test_split]
     return X_train, y_train, X_val, y_val, X_test, y_test
 
-def load_from_data_directory(datadir, y_label='_mask'):
+def load_from_data_directory(datadir, y_label='_defaced'):
     """load data from the specified datadir"""
     total_files = []
     for _,_,files in os.walk(datadir):

@@ -1,6 +1,4 @@
 import os 
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import unet
 from keras import backend as K
@@ -14,7 +12,6 @@ import tensorflow as tf
 from metrics import dice_coefficient
 import argparse
 import time
-# Use CPU
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--evaluate', default=False, action='store_true') 
@@ -111,12 +108,13 @@ def evaluate():
 	partition = {}
 	model = load_model('unet_3d_bse.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
 	#model.load_weights('unet_3d_regression.hdfs')
+	#pdb.set_trace()
 	(_,
 	    _,
 	    partition['x_val'],
 	    partition['y_val'],
 	    _,
-	    _)  = load_data('test_set_mri', split=(0,100,0), DEBUG=True, third_dimension=True)
+	    _)  = load_data('validation_set', split=(0,100,0), DEBUG=True, third_dimension=True)
 
 	print('Number of images to mask', len(partition['x_val']))
 	params = {
@@ -127,6 +125,8 @@ def evaluate():
                 'third_dimension': True
 	     	}
 
+	#pdb.set_trace()
+	pdb.set_trace()
 	validation_generator = DataGenerator(partition['x_val'], partition['y_val'], **params)
 	for index, filename in enumerate(validation_generator):
 		x_batch, _ = validation_generator[index]
