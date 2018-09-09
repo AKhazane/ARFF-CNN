@@ -136,9 +136,9 @@ def evaluate(validation=True):
 		print('dealing with file', validation_generator.list_IDs[index])
 		predicted_mask = model.predict_on_batch(x=x_batch)
 		if validation:
-                    save_prediction([partition['y_val'][index]], predicted_mask, 'validation_predictions/')
-                else:
-                    save_prediction(partition['y_val'][index]], predicted_mask, 'test_predictions/')
+			save_prediction([partition['y_val'][index]], predicted_mask, 'validation_predictions/')
+		else:
+			save_prediction(partition['y_val'][index]], predicted_mask, 'test_predictions/')
 
 def train(restore=False):
 	K.clear_session()
@@ -201,9 +201,9 @@ def train(restore=False):
 if __name__ == '__main__':
 	args = parser.parse_args()
 	if args.evaluate:
-                evaluate(validation=True)
-        elif args.test:
-                evaluate(validation=False) 
+		evaluate(validation=True)
+	elif args.test:
+		evaluate(validation=False) 
 	elif args.restore:
 		train(True) 
 	elif args.speed_test:
