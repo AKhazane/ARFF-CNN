@@ -118,7 +118,7 @@ def evaluate():
 
 	print('Number of images to mask', len(partition['x_val']))
 	params = {
-		'dim': (160,256,256),
+		'dim': (256,320,256),
         	'batch_size': 1,
         	'n_channels': 1,
         	'shuffle': False,
@@ -126,7 +126,7 @@ def evaluate():
 	     	}
 
 	#pdb.set_trace()
-	pdb.set_trace()
+	#pdb.set_trace()
 	validation_generator = DataGenerator(partition['x_val'], partition['y_val'], **params)
 	for index, filename in enumerate(validation_generator):
 		x_batch, _ = validation_generator[index]
@@ -140,7 +140,7 @@ def train(restore=False):
 #	pdb.set_trace()
 	partition = {}
 	if not restore:
-		model = unet.unet((1,160,256,256))
+		model = unet.unet((1, 256, 320, 256))
 		print('Instantiated new 3D-Unet') 
 
 	if restore:
@@ -158,13 +158,14 @@ def train(restore=False):
 
 
 	params = {
-		    'dim': (160,256,256),
+		    'dim': (256,320,256),
 	            'batch_size': 1,
 	            'n_channels': 1,
 	            'shuffle': True,
                     'third_dimension': True
              }
 
+        #pdb.set_trace()
 	training_generator = DataGenerator(partition['x_train'], partition['y_train'], **params)
 	validation_generator = DataGenerator(partition['x_val'], partition['y_val'], **params)
 #	testing_generator = DataGenerator(partition['x_test'], partition['y_test'], **params)
@@ -173,12 +174,12 @@ def train(restore=False):
 
 	model_checkpoint = ModelCheckpoint('unet_3d_bse.hdf5', monitor='loss',verbose=1, save_best_only=True)
 
-	
 	model.fit_generator(generator=training_generator,
                     validation_data=validation_generator,
                     #steps_per_epoch = 1,
                     validation_steps = 1,
-	  	    epochs=10,
+	  	    epochs=5,
+                    #max_queue_size=3,
 		    callbacks = [model_checkpoint],
 		    use_multiprocessing=True,
 		    workers=6,

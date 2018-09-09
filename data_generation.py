@@ -4,7 +4,7 @@ import numpy as np
 import nibabel as nib
 import keras
 import pdb
-
+import nilearn 
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -39,13 +39,15 @@ class DataGenerator(keras.utils.Sequence):
 
 
     def resize_image(self, image, mask=False):
-        new_dims = tuple((image.shape[0] + (self.dim[0] - image.shape[0]), image.shape[1], image.shape[2]))
+        #new_dims = tuple((image.shape[0] + (self.dim[0] - image.shape[0]), image.shape[1], image.shape[2]))
         if mask:
-            new_image = np.ones(new_dims) # somewhat odd because a sliver of white will appear around the mask in the GT image 
-        else:
-            new_image = np.zeros(new_dims) 
-        new_image[:image.shape[0], :image.shape[1], :image.shape[2]] = image 
-        return new_image 
+            img = nilearn.image.resample_img(target_shape=(256, 320, 256)) 
+        #if mask:
+        #    new_image = np.ones(new_dims) # somewhat odd because a sliver of white will appear around the mask in the GT image 
+        #else:
+        #    new_image = np.zeros(new_dims) 
+        #new_image[:image.shape[0], :image.shape[1], :image.shape[2]] = image 
+        return img
 
  #    def create_mask(self, norm, defaced):
 	# output = defaced.copy() - norm.copy() 
@@ -98,12 +100,16 @@ class DataGenerator(keras.utils.Sequence):
             # Load scan data for raw scan & mask
             if third_dimension:
                 # set channels as first dimension for 3D Unet.
-              
-                x_data = np.swapaxes(nib.load(ID).get_data().astype(np.float32), 0, -1)
-                y_data = np.swapaxes(nib.load(list_ys_temp[i]).get_data().astype(np.float32), 0, -1)
-                if x_data.shape[0] < self.dim[0]:
-                    x_data = self.resize_image(x_data) 
-                    y_data = self.resize_image(y_data, mask=True)
+#                pdb.set_trace() 
+                 
+             
+                x_data = np.expand_dims(np.squeeze(nib.load(ID).get_data().astype(np.float32)), axis=0) 
+                y_data = np.expand_dims(np.squeeze(nib.load(list_ys_temp[i]).get_data().astype(np.float32)), axis=0)
+#                x_data = self.resize_image(x_data) 
+#                y_data = self.resize_image(y_data) 
+                #if x_data.shape[0] < self.dim[0]:
+#                    x_data = self.resize_image(x_data) 
+#                    y_data = self.resize_image(y_data, mask=True)
 
                 #x_data = self.normalizeImg(x_data) 
                 #y_data = self.getMaskData(x_data, y_data)

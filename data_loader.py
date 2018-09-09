@@ -16,8 +16,9 @@ def load_data(data_directory, split, DEBUG=False, third_dimension=False):
     if not os.path.isdir(data_directory):
         total_files = get_file_list_from_dir('MRI_Images', 'masks') 
     else:
-        total_files = load_from_data_directory(data_directory) 
+        total_files = load_from_data_directory(data_directory, '_mask') 
     shuffle(total_files) 
+#    pdb.set_trace()
     train_split, val_split, test_split = data_split(total_files, split)
     X_train = [i[0] for i in train_split]
     y_train = [i[1] for i in train_split]
