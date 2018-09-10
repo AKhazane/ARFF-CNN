@@ -31,7 +31,9 @@ def save_img(img, fn = 'd_mask.nii'):
 
 def save_prediction(file_names, predictions, directory):
 	for idx, fn in enumerate(file_names):
-		pred_fn = directory + os.path.basename(os.path.normpath(os.path.splitext(fn)[0])) + '_pred_mask.nii.gz'  
+  #              pdb.set_trace()
+		pred_fn = directory + os.path.basename(os.path.normpath(os.path.splitext(fn)[0]))  
+                pred_fn = pred_fn.replace('_mask.nii', '_pred_mask.nii.gz')
 		save_img(predictions[idx], fn=pred_fn) 
 		print(pred_fn, 'saved.')
 
@@ -107,7 +109,7 @@ def predict(model, validation_generator, test_set):
 
 
 def evaluate(validation=True):
-        pdb.set_trace()
+        #pdb.set_trace()
 	partition = {}
 	model = load_model('unet_3d_bse.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
 	#model.load_weights('unet_3d_regression.hdfs')
@@ -138,7 +140,7 @@ def evaluate(validation=True):
 		if validation:
 			save_prediction([partition['y_val'][index]], predicted_mask, 'validation_predictions/')
 		else:
-			save_prediction(partition['y_val'][index]], predicted_mask, 'test_predictions/')
+			save_prediction([partition['y_val'][index]], predicted_mask, 'test_predictions/')
 
 def train(restore=False):
 	K.clear_session()
@@ -149,9 +151,9 @@ def train(restore=False):
 		print('Instantiated new 3D-Unet') 
 
 	if restore:
-		model = load_model('unet_3d_bse.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
+		model = load_model('unet_3d_bse_ONE_EPOCH.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
 		#model.load_weights('unet_3d_binary_cross_entropy.hdfs')
-		print('Restored 3D-Unet from latest checkpoint file.')  
+		print('Restored 3D-Unet from latest HDF5 file.')  
 
 	print(model.summary())
 	(partition['x_train'],
@@ -159,7 +161,7 @@ def train(restore=False):
     partition['x_val'],
     partition['y_val'],
     partition['x_test'],
-    partition['y_test'])  = load_data('data', split=(90,10,0), DEBUG=True, third_dimension=True)
+    partition['y_test'])  = load_data('data', split=(95,5,0), DEBUG=True, third_dimension=True)
 
 
 	params = {
@@ -200,7 +202,7 @@ def train(restore=False):
 
 if __name__ == '__main__':
 	args = parser.parse_args()
-	if args.evaluate:
+	if args.validation_test:
 		evaluate(validation=True)
 	elif args.test:
 		evaluate(validation=False) 
