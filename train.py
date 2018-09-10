@@ -32,8 +32,8 @@ def save_img(img, fn = 'd_mask.nii'):
 def save_prediction(file_names, predictions, directory):
 	for idx, fn in enumerate(file_names):
   #              pdb.set_trace()
-		pred_fn = directory + os.path.basename(os.path.normpath(os.path.splitext(fn)[0]))  
-                pred_fn = pred_fn.replace('_mask.nii', '_pred_mask.nii.gz')
+		pred_fn = directory + os.path.basename(os.path.normpath(os.path.splitext(fn)[0]))
+		pred_fn = pred_fn.replace('_mask.nii', '_pred_mask.nii.gz')
 		save_img(predictions[idx], fn=pred_fn) 
 		print(pred_fn, 'saved.')
 
