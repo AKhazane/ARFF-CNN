@@ -22,6 +22,8 @@ parser.add_argument('--speed_test', default=False, action='store_true')
 
 parser.add_argument('--test', default=False, action='store_true') 
 
+parser.add_argument('--checkpoint', default='unet_3d_bse.hdf5', action='store') 
+
 args = parser.parse_args()
 
 def save_img(img, fn = 'd_mask.nii'):
@@ -108,10 +110,11 @@ def predict(model, validation_generator, test_set):
 		save_prediction([test_set[i]], predicted_mask)
 
 
-def evaluate(validation=True):
+def evaluate(validation=True, checkpoint='unet_3d_bse.hdfs'):
         #pdb.set_trace()
 	partition = {}
-	model = load_model('unet_3d_bse.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
+        print('Using checkpoint: %s'  % (checkpoint)) 
+	model = load_model(checkpoint, custom_objects={'dice_coefficient': dice_coefficient}) 
 	#model.load_weights('unet_3d_regression.hdfs')
 	#pdb.set_trace()
 	(_,
@@ -119,7 +122,7 @@ def evaluate(validation=True):
 	    partition['x_val'],
 	    partition['y_val'],
 	    _,
-	    _)  = load_data('validation_set', split=(0,100,0), DEBUG=True, third_dimension=True)
+	    _)  = load_data('test_set', split=(0,100,0), DEBUG=True, third_dimension=True)
 
 	print('Number of images to mask', len(partition['x_val']))
 	params = {
@@ -138,7 +141,7 @@ def evaluate(validation=True):
 		print('dealing with file', validation_generator.list_IDs[index])
 		predicted_mask = model.predict_on_batch(x=x_batch)
 		if validation:
-			save_prediction([partition['y_val'][index]], predicted_mask, 'validation_predictions/')
+			save_prediction([partition['y_val'][index]], predicted_mask, 'validation_predictions2/')
 		else:
 			save_prediction([partition['y_val'][index]], predicted_mask, 'test_predictions/')
 
@@ -203,7 +206,7 @@ def train(restore=False):
 if __name__ == '__main__':
 	args = parser.parse_args()
 	if args.validation_test:
-		evaluate(validation=True)
+		evaluate(validation=True, checkpoint=args.checkpoint)
 	elif args.test:
 		evaluate(validation=False) 
 	elif args.restore:
