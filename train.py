@@ -113,7 +113,7 @@ def predict(model, validation_generator, test_set):
 def evaluate(validation=True, checkpoint='unet_3d_bse.hdfs'):
         #pdb.set_trace()
 	partition = {}
-        print('Using checkpoint: %s'  % (checkpoint)) 
+    print('Using checkpoint: %s'  % (checkpoint)) 
 	model = load_model(checkpoint, custom_objects={'dice_coefficient': dice_coefficient}) 
 	#model.load_weights('unet_3d_regression.hdfs')
 	#pdb.set_trace()
