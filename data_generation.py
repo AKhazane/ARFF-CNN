@@ -29,7 +29,7 @@ class DataGenerator(keras.utils.Sequence):
         self.third_dimension = third_dimension
         self.shuffle = shuffle
         self.on_epoch_end()
-        self.data_augmentors = [np.flip, np.fliplr, np.rot90] 
+        self.data_augmentors = [np.fliplr, random_rotation] 
     def __len__(self):
         'Denotes the number of batches per epoch'
         return int(np.floor(len(self.list_IDs) / self.batch_size))

@@ -111,7 +111,7 @@ def predict(model, validation_generator, test_set):
 		save_prediction([test_set[i]], predicted_mask)
 
 
-def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
+def evaluate(validation=True, checkpoint='unet_3d_bse.hdfs'):
         #pdb.set_trace()
 	partition = {}
 #        print('Using checkpoint: %s'  % (checkpoint)) 
@@ -198,7 +198,7 @@ def train(restore=False):
 		    use_multiprocessing=True,
 		    workers=6,
                     verbose=1)
-	model.save_weights('unet_3d_binary_cross_entropy_actual_dropout.hdfs')
+	model.save_weights('unet_3d_binary_cross_entropy_actual_dropout.hdf5')
 
 	print('Predicting ...')
 	predict(model, validation_generator, partition['y_val'])
