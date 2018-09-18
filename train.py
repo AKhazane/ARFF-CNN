@@ -111,7 +111,7 @@ def predict(model, validation_generator, test_set):
 		save_prediction([test_set[i]], predicted_mask)
 
 
-def evaluate(validation=True, checkpoint='unet_3d_bse.hdfs'):
+def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
         #pdb.set_trace()
 	partition = {}
 #        print('Using checkpoint: %s'  % (checkpoint)) 
