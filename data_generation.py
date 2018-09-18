@@ -6,15 +6,12 @@ import keras
 import pdb
 import nilearn 
 import random 
+from random import randint
 import skimage as sk
 from skimage import transform 
 from skimage import util 
 
 
-def random_rotation(image_array):
-    # pick a random degree of rotation between 75% on the left and 75% on the right
-    random_degree = random.uniform(-75, 75)
-    return sk.transform.rotate(image_array, random_degree)
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -29,7 +26,6 @@ class DataGenerator(keras.utils.Sequence):
         self.third_dimension = third_dimension
         self.shuffle = shuffle
         self.on_epoch_end()
-        self.data_augmentors = [np.fliplr, random_rotation] 
     def __len__(self):
         'Denotes the number of batches per epoch'
         return int(np.floor(len(self.list_IDs) / self.batch_size))
@@ -48,10 +44,17 @@ class DataGenerator(keras.utils.Sequence):
         return X, y
 
 
-    def data_augmentation(self, image_data):
-        augmentor = random.choice(self.augmentors) 
-        return augmentor(image_data) 
-
+    def data_augmentation(self, x, y):
+        choice = randint(0, 1) 
+        if choice == 0:
+#            random_degree = random.uniform(-75, 75)
+            x = np.flipud(x)
+            y = np.flupud(y)
+        else:
+            x = np.fliplr(x) 
+            y = np.fliplr(y)
+        return x,y 
+    
     def resize_image(self, image, mask=False):
         #new_dims = tuple((image.shape[0] + (self.dim[0] - image.shape[0]), image.shape[1], image.shape[2]))
         if mask:
@@ -114,11 +117,10 @@ class DataGenerator(keras.utils.Sequence):
             # Load scan data for raw scan & mask
             if third_dimension:
                 # set channels as first dimension for 3D Unet.
-                pdb.set_trace() 
+                #pdb.set_trace() 
                  
                 # Augment incoming training data according to self.augmentors 
-                raw_x = self.data_augmentation(np.squeeze(nib.load(ID).get_data().astype(np.float32))
-                raw_y = self.data_augmentation(np.squeeze(nib.load(list_ys_temp[i]).get_data().astype(np.float32))
+                raw_x, raw_y = self.data_augmentation(np.squeeze(nib.load(ID).get_data().astype(np.float32)), np.squeeze(nib.load(list_ys_temp[i]).get_data().astype(np.float32)))
                 x_data = np.expand_dims(raw_x, axis=0) 
                 y_data = np.expand_dims(raw_y, axis=0)
 #                x_data = self.resize_image(x_data) 

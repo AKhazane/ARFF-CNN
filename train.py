@@ -148,8 +148,9 @@ def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
 			save_prediction([partition['y_val'][index]], predicted_mask, 'test_predictions/')
 
 def train(restore=False):
+ 
 	K.clear_session()
-#	pdb.set_trace()
+	#pdb.set_trace()
 	partition = {}
 	if not restore:
 		model = unet.unet((1, 256, 320, 256))
