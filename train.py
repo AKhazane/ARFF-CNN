@@ -3,6 +3,7 @@ import os
 import unet
 from keras import backend as K
 from keras.models import *
+from keras.utils import multi_gpu_model
 from data_loader import *
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from data_generation import DataGenerator
@@ -110,10 +111,11 @@ def predict(model, validation_generator, test_set):
 		save_prediction([test_set[i]], predicted_mask)
 
 
-def evaluate(validation=True, checkpoint='unet_3d_bse.hdfs'):
+def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
         #pdb.set_trace()
 	partition = {}
-    print('Using checkpoint: %s'  % (checkpoint)) 
+#        print('Using checkpoint: %s'  % (checkpoint)) 
+	print('Using checkpoint %s' % checkpoint) 
 	model = load_model(checkpoint, custom_objects={'dice_coefficient': dice_coefficient}) 
 	#model.load_weights('unet_3d_regression.hdfs')
 	#pdb.set_trace()
@@ -141,7 +143,7 @@ def evaluate(validation=True, checkpoint='unet_3d_bse.hdfs'):
 		print('dealing with file', validation_generator.list_IDs[index])
 		predicted_mask = model.predict_on_batch(x=x_batch)
 		if validation:
-			save_prediction([partition['y_val'][index]], predicted_mask, 'validation_predictions2/')
+			save_prediction([partition['y_val'][index]], predicted_mask, 'validation_predictions/')
 		else:
 			save_prediction([partition['y_val'][index]], predicted_mask, 'test_predictions/')
 
@@ -151,10 +153,12 @@ def train(restore=False):
 	partition = {}
 	if not restore:
 		model = unet.unet((1, 256, 320, 256))
+#                model = multi_gpu_model(model, gpus=[0,1], cpu_merge=True, cpu_relocation=False)
+
 		print('Instantiated new 3D-Unet') 
 
 	if restore:
-		model = load_model('unet_3d_bse_ONE_EPOCH.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
+		model = load_model('unet_3d_bse_ONE_EPOCH_actual_dropout.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
 		#model.load_weights('unet_3d_binary_cross_entropy.hdfs')
 		print('Restored 3D-Unet from latest HDF5 file.')  
 
@@ -182,19 +186,19 @@ def train(restore=False):
 	print('Loaded Data')
 
 
-	model_checkpoint = ModelCheckpoint('unet_3d_bse.hdf5', monitor='loss',verbose=1, save_best_only=True)
+	model_checkpoint = ModelCheckpoint('unet_3d_bse_ONE_EPOCH_actual_dropout.hdf5', monitor='loss',verbose=1, save_best_only=True)
 
 	model.fit_generator(generator=training_generator,
                     validation_data=validation_generator,
                     #steps_per_epoch = 1,
                     validation_steps = 1,
-	  	    epochs=5,
+	  	    epochs=1,
                     #max_queue_size=3,
 		    callbacks = [model_checkpoint],
 		    use_multiprocessing=True,
 		    workers=6,
                     verbose=1)
-	model.save_weights('unet_3d_binary_cross_entropy.hdfs')
+	model.save_weights('unet_3d_binary_cross_entropy_actual_dropout.hdfs')
 
 	print('Predicting ...')
 	predict(model, validation_generator, partition['y_val'])
@@ -205,10 +209,11 @@ def train(restore=False):
 
 if __name__ == '__main__':
 	args = parser.parse_args()
+#	pdb.set_trace()
 	if args.validation_test:
 		evaluate(validation=True, checkpoint=args.checkpoint)
 	elif args.test:
-		evaluate(validation=False) 
+		evaluate(validation=False, checkpoint=args.checkpoint) 
 	elif args.restore:
 		train(True) 
 	elif args.speed_test:

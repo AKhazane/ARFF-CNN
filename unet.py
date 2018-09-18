@@ -4,6 +4,7 @@ from keras.layers import *
 #from keras.layers import Merge
 from keras.engine import Model
 from keras.optimizers import Adam
+#from keras.utils import multi_gpu_model
 #from helper import create_convolution_block, concatenate
 from metrics import dice_coefficient
 # import numpy as np
@@ -19,6 +20,7 @@ def unet(inputShape=(1,None,256,256)):
     #initial padding
     #    pdb.set_trace()
         #pdb.set_trace() 
+#        pdb.set_trace()
         inputs = Input(shape=inputShape)
 
         conv1 = Conv3D(8, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(inputs)
@@ -55,18 +57,21 @@ def unet(inputShape=(1,None,256,256)):
         merge6 = concatenate([drop4,up6], axis = 1)
         conv6 = Conv3D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(merge6)
         conv6 = Conv3D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(conv6)
+        drop6 = Dropout(0.5)(conv6) 
 
-        up7 = Conv3D(32, 2, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(UpSampling3D(size=2, data_format='channels_first')(conv6))
+        up7 = Conv3D(32, 2, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(UpSampling3D(size=2, data_format='channels_first')(drop6))
         merge7 = concatenate([conv3,up7], axis = 1)
         conv7 = Conv3D(32, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(merge7)
         conv7 = Conv3D(32, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(conv7)
+        drop7 = Dropout(0.5)(conv7)
 
-        up8 = Conv3D(16, 2, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(UpSampling3D(size=2, data_format='channels_first')(conv7))
+        up8 = Conv3D(16, 2, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(UpSampling3D(size=2, data_format='channels_first')(drop7))
         merge8 = concatenate([conv2,up8],  axis = 1)
         conv8 = Conv3D(16, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(merge8)
         conv8 = Conv3D(16, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(conv8)
+        drop8 = Dropout(0.5)(conv8) 
 
-        up9 = Conv3D(8, 2, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(UpSampling3D(size=2, data_format='channels_first')(conv8))
+        up9 = Conv3D(8, 2, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(UpSampling3D(size=2, data_format='channels_first')(drop8))
         merge9 = concatenate([conv1,up9],  axis = 1)
         conv9 = Conv3D(8, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(merge9)
         conv9 = Conv3D(8, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(conv9)
@@ -74,8 +79,8 @@ def unet(inputShape=(1,None,256,256)):
         conv10 = Conv3D(1, 1, activation = 'sigmoid', data_format='channels_first')(conv9)
 
         model = Model(input = inputs, output = conv10)
-
-        model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['mse', 'accuracy', dice_coefficient])
+ #       model = multi_gpu_model(model, gpus=2) 
+        model.compile(optimizer = Adam(lr = 1e-3), loss = 'binary_crossentropy', metrics = ['mse', 'accuracy', dice_coefficient])
 #        model.compile(optimizer = keras.optimizers.SGD(lr = 1e-12, decay=1e-6, nesterov=True, momentum=0.9), loss = 'mse', metrics = ['mse', dice_coefficient])
-        
+ #       model = multi_gpu_model(model, gpus=[0,1], cpu_merge=True, cpu_relocation=False)        
         return model
