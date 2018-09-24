@@ -116,7 +116,7 @@ def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
 	partition = {}
 #        print('Using checkpoint: %s'  % (checkpoint)) 
 	print('Using checkpoint %s' % checkpoint) 
-	model = load_model(checkpoint, custom_objects={'dice_coefficient': dice_coefficient}) 
+	model = load_model('unet_3d_bse_ONE_EPOCH.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
 	#model.load_weights('unet_3d_regression.hdfs')
 	#pdb.set_trace()
 	(_,
@@ -124,7 +124,7 @@ def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
 	    partition['x_val'],
 	    partition['y_val'],
 	    _,
-	    _)  = load_data('test_set', split=(0,100,0), DEBUG=True, third_dimension=True)
+	    _)  = load_data('test_set' if not validation else 'validation_set', split=(0,100,0), DEBUG=True, third_dimension=True)
 
 	print('Number of images to mask', len(partition['x_val']))
 	params = {
@@ -159,7 +159,7 @@ def train(restore=False):
 		print('Instantiated new 3D-Unet') 
 
 	if restore:
-		model = load_model('unet_3d_bse_ONE_EPOCH_actual_dropout.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
+		model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
 		#model.load_weights('unet_3d_binary_cross_entropy.hdfs')
 		print('Restored 3D-Unet from latest HDF5 file.')  
 
@@ -187,7 +187,7 @@ def train(restore=False):
 	print('Loaded Data')
 
 
-	model_checkpoint = ModelCheckpoint('unet_3d_bse_ONE_EPOCH_actual_dropout.hdf5', monitor='loss',verbose=1, save_best_only=True)
+	model_checkpoint = ModelCheckpoint('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation.hdf5', monitor='loss',verbose=1, save_best_only=True)
 
 	model.fit_generator(generator=training_generator,
                     validation_data=validation_generator,
@@ -199,7 +199,7 @@ def train(restore=False):
 		    use_multiprocessing=True,
 		    workers=6,
                     verbose=1)
-	model.save_weights('unet_3d_binary_cross_entropy_actual_dropout.hdf5')
+	model.save_weights('unet_3d_binary_cross_entropy_JUST_data_augmentation.hdf5')
 
 	print('Predicting ...')
 	predict(model, validation_generator, partition['y_val'])

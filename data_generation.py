@@ -45,18 +45,18 @@ class DataGenerator(keras.utils.Sequence):
 
 
     def data_augmentation(self, x, y):
-        choice = randint(0, 1) 
+        choice = randint(0, 2) 
         if choice == 0:
 #            random_degree = random.uniform(-75, 75)
             x = np.flipud(x)
-            y = np.flupud(y)
-        else:
+            y = np.flipud(y)
+        elif choice == 1:
             x = np.fliplr(x) 
             y = np.fliplr(y)
         return x,y 
     
     def resize_image(self, image, mask=False):
-        #new_dims = tuple((image.shape[0] + (self.dim[0] - image.shape[0]), image.shape[1], image.shape[2]))
+          #new_dims = tuple((image.shape[0] + (self.dim[0] - image.shape[0]), image.shape[1], image.shape[2]))
         if mask:
             img = nilearn.image.resample_img(target_shape=(256, 320, 256)) 
         #if mask:
@@ -120,6 +120,8 @@ class DataGenerator(keras.utils.Sequence):
                 #pdb.set_trace() 
                  
                 # Augment incoming training data according to self.augmentors 
+#                x_data = np.expand_dims(np.squeeze(nib.load(ID).get_data().astype(np.float32)), axis=0) 
+#                y_data = np.expand_dims(np.squeeze(nib.load(list_ys_temp[i]).get_data().astype(np.float32)), axis=0)
                 raw_x, raw_y = self.data_augmentation(np.squeeze(nib.load(ID).get_data().astype(np.float32)), np.squeeze(nib.load(list_ys_temp[i]).get_data().astype(np.float32)))
                 x_data = np.expand_dims(raw_x, axis=0) 
                 y_data = np.expand_dims(raw_y, axis=0)
