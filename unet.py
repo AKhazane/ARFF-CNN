@@ -7,6 +7,7 @@ from keras.optimizers import Adam
 #from keras.utils import multi_gpu_model
 #from helper import create_convolution_block, concatenate
 from metrics import dice_coefficient
+from losses import weightedLoss
 from keras.backend import binary_crossentropy as bce
 # import numpy as np
 import tensorflow as tf 
@@ -79,11 +80,12 @@ def unet(inputShape=(1,None,256,256), custom_loss=True):
         conv9 = Conv3D(2, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(conv9)
         conv10 = Conv3D(1, 1, activation = 'sigmoid', data_format='channels_first')(conv9)
 
+#        pdb.set_trace()
         model = Model(input = inputs, output = conv10)
 
         chosen_loss = bce
         if custom_loss:
-            weights = [4, 1]
+            weights = [2, 1]
             chosen_loss = weightedLoss(bce, weights)
 
  #       model = multi_gpu_model(model, gpus=2) 
