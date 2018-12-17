@@ -11,8 +11,10 @@ import nibabel as nib
 import pdb 
 import tensorflow as tf
 from metrics import dice_coefficient
+from losses import weightedLoss
 import argparse
 import time
+from keras.backend import binary_crossentropy as bce
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--validation_test', default=False, action='store_true') 
@@ -183,6 +185,7 @@ def train(restore=False):
 #	K.clear_session()
 	#pdb.set_trace()
 	partition = {}
+	#pdb.set_trace() 
 	if not restore:
 		model = unet.unet((1, 256, 320, 256))
 #                model = multi_gpu_model(model, gpus=[0,1], cpu_merge=True, cpu_relocation=False)
@@ -190,7 +193,7 @@ def train(restore=False):
 		print('Instantiated new 3D-Unet') 
 
 	if restore:
-		model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
+		model = load_model('unet_3d_weighted_BCE_ONE_EPOCH.hdf5', custom_objects={'dice_coefficient': dice_coefficient, 'lossFunc': weightedLoss(bce, [2,1])}) 
 		#model.load_weights('unet_3d_binary_cross_entropy.hdfs')
 		print('Restored 3D-Unet from latest HDF5 file.')  
 
@@ -218,7 +221,7 @@ def train(restore=False):
 	print('Loaded Data')
 
 
-	model_checkpoint = ModelCheckpoint('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_fourth_epoch.hdf5', monitor='loss',verbose=1, save_best_only=True)
+	model_checkpoint = ModelCheckpoint('unet_3d_DIFF_weighted_BCE_one_EPOCH.hdf5', monitor='loss',verbose=1, save_best_only=True)
 
 	model.fit_generator(generator=training_generator,
                     validation_data=validation_generator,
@@ -230,7 +233,7 @@ def train(restore=False):
 		    use_multiprocessing=True,
 		    workers=6,
                     verbose=1)
-	model.save_weights('unet_3d_binary_cross_entropy_JUST_data_augmentation.hdf5')
+	model.save_weights('unet_3d_DIFF_weighted_BCE_one_EPOCH_weights.hdf5')
 
 	print('Predicting ...')
 	predict(model, validation_generator, partition['y_val'])
