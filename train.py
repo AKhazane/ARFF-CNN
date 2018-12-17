@@ -25,6 +25,8 @@ parser.add_argument('--test', default=False, action='store_true')
 
 parser.add_argument('--checkpoint', default='unet_3d_bse.hdf5', action='store') 
 
+parser.add_argument('--convert_to_tensorflow', default=False, action='store_true') 
+
 args = parser.parse_args()
 
 def save_img(img, fn = 'd_mask.nii'):
@@ -116,7 +118,7 @@ def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
 	partition = {}
 #        print('Using checkpoint: %s'  % (checkpoint)) 
 	print('Using checkpoint %s' % checkpoint) 
-	model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_fourth_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
+	model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
 	#model.load_weights('unet_3d_regression.hdfs')
 	#pdb.set_trace()
 	(_,
@@ -147,9 +149,38 @@ def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
 		else:
 			save_prediction([partition['y_val'][index]], predicted_mask, 'test_predictions/')
 
+
+
+def freeze_session(session, keep_var_names=None, output_names=None, clear_devices=True):
+
+    graph = session.graph
+    with graph.as_default():
+        freeze_var_names = list(set(v.op.name for v in tf.global_variables()).difference(keep_var_names or []))
+        output_names = output_names or []
+        output_names += [v.op.name for v in tf.global_variables()]
+        #pdb.set_trace()
+        input_graph_def = graph.as_graph_def()
+        if clear_devices:
+            for node in input_graph_def.node:
+                node.device = ""
+        frozen_graph = tf.graph_util.convert_variables_to_constants(
+            session, input_graph_def, output_names, freeze_var_names)
+        return frozen_graph	
+
+
+def convert_to_pb(model_file):
+	K.clear_session()
+        #pdb.set_trace() 
+	model = load_model(model_file, custom_objects={'dice_coefficient': dice_coefficient})
+	
+	frozen_graph = freeze_session(K.get_session(),
+                              output_names=[out.op.name for out in model.outputs])
+        tf.train.write_graph(frozen_graph, "graphs", "best_3d_model.pb", as_text=False)
+	print('Successfully translated keras model to tensorflow graph session!')
+
 def train(restore=False):
  
-	K.clear_session()
+#	K.clear_session()
 	#pdb.set_trace()
 	partition = {}
 	if not restore:
@@ -176,7 +207,7 @@ def train(restore=False):
 		    'dim': (256,320,256),
 	            'batch_size': 1,
 	            'n_channels': 1,
-	            'shuffle': True,
+	           mshuffle': True,
                     'third_dimension': True
              }
 
@@ -210,8 +241,10 @@ def train(restore=False):
 
 if __name__ == '__main__':
 	args = parser.parse_args()
-#	pdb.set_trace()
-	if args.validation_test:
+ #	pdb.set_trace()
+        if args.convert_to_tensorflow:
+		convert_to_pb(args.checkpoint)
+	elif args.validation_test:
 		evaluate(validation=True, checkpoint=args.checkpoint)
 	elif args.test:
 		evaluate(validation=False, checkpoint=args.checkpoint) 
