@@ -1,6 +1,7 @@
 import os 
 
 import unet
+import json
 from keras import backend as K
 from keras.models import *
 from keras.utils import multi_gpu_model
@@ -190,7 +191,32 @@ def train(restore=False):
 		print('Instantiated new 3D-Unet') 
 
 	if restore:
-		model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
+		pdb.set_trace() 
+                base_model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
+                s_config = base_model.get_config()
+                model_idx = np.random.choice(500)
+                name_mapping = {v['name']: '%04d_%04d' % (model_idx, c_idx) for c_idx,v in enumerate(s_config['layers'])}
+                raw_str = json.dumps(s_config)
+                for k,v in name_mapping.items():
+                    raw_str = raw_str.replace('"{}"'.format(k), '"{}"'.format(v))
+                n_config = json.loads(raw_str)
+    #            for index in range(len(n_config['layers'])):
+                n_config['layers'][0]['config']['batch_input_shape'] = (1, 1, 256, 320, 256)
+
+                fix_model = Model.from_config(n_config)
+                fix_model.load_weights('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5')
+                fix_model.save('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch_ALTERED_2.hdf5')
+
+
+
+
+		old_model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
+                new_model = unet.unet((1, 1, 256, 320, 256)) 
+                for new_layer, layer in zip(new_model.layers[1:], old_model.layers[1:]):
+                    new_layer.set_weights(layer.get_weights())
+         #       pdb.set_trace()
+#		new_model.save('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch_ALTERED.hdf5')#
+		return
 		#model.load_weights('unet_3d_binary_cross_entropy.hdfs')
 		print('Restored 3D-Unet from latest HDF5 file.')  
 
@@ -207,7 +233,7 @@ def train(restore=False):
 		    'dim': (256,320,256),
 	            'batch_size': 1,
 	            'n_channels': 1,
-	           mshuffle': True,
+	            'shuffle': True,
                     'third_dimension': True
              }
 
@@ -241,7 +267,7 @@ def train(restore=False):
 
 if __name__ == '__main__':
 	args = parser.parse_args()
- #	pdb.set_trace()
+# 	pdb.set_trace()
         if args.convert_to_tensorflow:
 		convert_to_pb(args.checkpoint)
 	elif args.validation_test:
