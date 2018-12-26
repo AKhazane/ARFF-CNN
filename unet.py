@@ -13,7 +13,7 @@ import nibabel as nib
 import pdb
 
 
-def unet(inputShape=(1,None,256,256)):
+def unet(inputShape=(1,1,256,320,256)):
        
     # paddedShape = (data_ch.shape[1]+2, data_ch.shape[2]+2, data_ch.shape[3]+2, data_ch.shape[4])
 
@@ -21,7 +21,7 @@ def unet(inputShape=(1,None,256,256)):
     #    pdb.set_trace()
         #pdb.set_trace() 
 #        pdb.set_trace()
-        inputs = Input(shape=inputShape)
+        inputs = Input(batch_shape=inputShape)
 
         conv1 = Conv3D(8, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(inputs)
         #print "conv1 shape:",conv1.shape
