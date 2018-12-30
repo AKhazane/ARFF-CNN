@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     MRI_image_data = pre_process_image(MRI_image)
 
-    deepdeface = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
+    deepdeface = load_model('model.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
 
 
     print('Masking %s ....' % (MRI_image))
