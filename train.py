@@ -193,7 +193,7 @@ def train(restore=False):
 	if restore:
                 pdb.set_trace() 
                 old_model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
-                base_model = unet.unet((1, 1, 256, 320, 256)) 
+                base_model = unet.unet((1, 256, 320, 256, 1)) 
                 for new_layer, layer in zip(base_model.layers[1:], old_model.layers[1:]):
                     new_layer.set_weights(layer.get_weights())
                 s_config = base_model.get_config()
