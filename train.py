@@ -114,22 +114,23 @@ def predict(model, validation_generator, test_set):
 
 
 def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
+        K.clear_session()
         #pdb.set_trace()
-	partition = {}
+        partition = {}
 #        print('Using checkpoint: %s'  % (checkpoint)) 
-	print('Using checkpoint %s' % checkpoint) 
-	model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
+        print('Using checkpoint %s' % checkpoint) 
+        model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
 	#model.load_weights('unet_3d_regression.hdfs')
 	#pdb.set_trace()
-	(_,
+        (_,
 	    _,
 	    partition['x_val'],
 	    partition['y_val'],
 	    _,
 	    _)  = load_data('test_set' if not validation else 'validation_set', split=(0,100,0), DEBUG=True, third_dimension=True)
 
-	print('Number of images to mask', len(partition['x_val']))
-	params = {
+        print('Number of images to mask', len(partition['x_val']))
+        params = {
 		'dim': (256,320,256),
         	'batch_size': 1,
         	'n_channels': 1,
@@ -139,15 +140,15 @@ def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
 
 	#pdb.set_trace()
 	#pdb.set_trace()
-	validation_generator = DataGenerator(partition['x_val'], partition['y_val'], **params)
-	for index, filename in enumerate(validation_generator):
-		x_batch, _ = validation_generator[index]
-		print('dealing with file', validation_generator.list_IDs[index])
-		predicted_mask = model.predict_on_batch(x=x_batch)
-		if validation:
-			save_prediction([partition['y_val'][index]], predicted_mask, 'validation_predictions/')
-		else:
-			save_prediction([partition['y_val'][index]], predicted_mask, 'test_predictions/')
+        validation_generator = DataGenerator(partition['x_val'], partition['y_val'], **params)
+        for index, filename in enumerate(validation_generator):
+                x_batch, _ = validation_generator[index]
+                print('dealing with file', validation_generator.list_IDs[index])
+                predicted_mask = model.predict_on_batch(x=x_batch)
+                if validation:
+                        save_prediction([partition['y_val'][index]], predicted_mask, 'validation_predictions/')
+                else:
+                        save_prediction([partition['y_val'][index]], predicted_mask, 'test_predictions/')
 
 
 
@@ -168,15 +169,15 @@ def freeze_session(session, keep_var_names=None, output_names=None, clear_device
         return frozen_graph	
 
 
-def convert_to_pb(model_file):
-	K.clear_session()
+def convert_to_pb(model_file): 
+        K.clear_session()
         #pdb.set_trace() 
-	model = load_model(model_file, custom_objects={'dice_coefficient': dice_coefficient})
+        model = load_model(model_file, custom_objects={'dice_coefficient': dice_coefficient})
 	
-	frozen_graph = freeze_session(K.get_session(),
+        frozen_graph = freeze_session(K.get_session(),
                               output_names=[out.op.name for out in model.outputs])
         tf.train.write_graph(frozen_graph, "graphs", "best_3d_model.pb", as_text=False)
-	print('Successfully translated keras model to tensorflow graph session!')
+        print('Successfully translated keras model to tensorflow graph session!')
 
 def train(restore=False):
  
@@ -207,7 +208,7 @@ def train(restore=False):
 		    'dim': (256,320,256),
 	            'batch_size': 1,
 	            'n_channels': 1,
-	           mshuffle': True,
+	            'shuffle': True,
                     'third_dimension': True
              }
 
@@ -240,17 +241,17 @@ def train(restore=False):
 
 
 if __name__ == '__main__':
-	args = parser.parse_args()
- #	pdb.set_trace()
+        args = parser.parse_args()
+# 	pdb.set_trace()
         if args.convert_to_tensorflow:
-		convert_to_pb(args.checkpoint)
-	elif args.validation_test:
-		evaluate(validation=True, checkpoint=args.checkpoint)
-	elif args.test:
-		evaluate(validation=False, checkpoint=args.checkpoint) 
-	elif args.restore:
-		train(True) 
-	elif args.speed_test:
-		speed_test('unet_regres_best.hdfs')
-	else:
-		train() 
+                convert_to_pb(args.checkpoint)
+        elif args.validation_test:
+                evaluate(validation=True, checkpoint=args.checkpoint)
+        elif args.test:
+                evaluate(validation=False, checkpoint=args.checkpoint) 
+        elif args.restore:
+                train(True) 
+        elif args.speed_test: 
+                speed_test('unet_regres_best.hdfs')
+        else: 
+                train() 
