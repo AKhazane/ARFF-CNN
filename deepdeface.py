@@ -38,18 +38,19 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    pdb.set_trace()
     if not args.input_file:
         print('Please specify the path of a MRI image for defacing.')
         sys.exit()
 
-    MRI_image = args.input_file 
+    MRI_image = args.input_file
 
 
     print('Preproessing input MRI image...')
 
     MRI_image_data = pre_process_image(MRI_image)
 
-    deepdeface = load_model('model.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
+    deepdeface = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
 
 
     print('Masking %s ....' % (MRI_image))
@@ -70,10 +71,10 @@ if __name__ == "__main__":
     print("--- %s seconds ---" % (time.time() - start_time))
 
 
-    masked_image_save = nib.Nifti1Image(masked_image)
+    masked_image_save = nib.Nifti1Image(masked_image, nib.load(MRI_image).affine)
 
 
-    output_file = os.path.splitext(os.path.splitext(MRI_image)[0])[0] + '_defaced.nii.gz'
+    output_file = os.path.splitext(os.path.splitext(os.path.basename(MRI_image))[0])[0] + '_defaced.nii.gz'
 
 
     print('Completed! Saving to %s...' % (output_file))
