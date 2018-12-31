@@ -9,7 +9,8 @@ import time
 
 
 from keras import backend as K
-from keras.models import *
+from keras.models import 
+from tensorflow.python.client import device_lib
 
 
 ''' Dice Coefficient Metric '''
@@ -35,6 +36,9 @@ def pre_process_image(img_file):
     return norm_img_data 
 
 
+def get_available_gpus():
+    local_device_protos = device_lib.list_local_devices()
+    return [x.name for x in local_device_protos if x.device_type == 'GPU']
 
 
 if __name__ == "__main__":
@@ -49,6 +53,9 @@ if __name__ == "__main__":
     if not args.input_file:
         print('Please specify the path of a MRI image for defacing.')
         sys.exit()
+
+
+
 
     MRI_image = args.input_file
 
