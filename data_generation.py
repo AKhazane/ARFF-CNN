@@ -46,11 +46,11 @@ class DataGenerator(keras.utils.Sequence):
 
     def data_augmentation(self, x, y):
         choice = randint(0, 2) 
-        if choice == 3:
+        if choice == 0:
 #            random_degree = random.uniform(-75, 75)
             x = np.flipud(x)
             y = np.flipud(y)
-        elif choice == 4:
+        elif choice == 1:
             x = np.fliplr(x) 
             y = np.fliplr(y)
         return x,y 
