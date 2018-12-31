@@ -53,21 +53,21 @@ def speed_test(checkpoint_file='unet_3d_bse.hdf5'):
 	model = load_model(checkpoint_file, custom_objects={'dice_coefficient': dice_coefficient}) 
 
 	(_,
-	    _,
-	   	_,
-	    _,
-	    partition['x_test'],
-	    partition['y_test'])  = load_data('test_set_mri', split=(0,0,100), DEBUG=False, third_dimension=True)
+		_,
+		_,
+		_,
+		partition['x_test'],
+		partition['y_test'])  = load_data('test_set_mri', split=(0,0,100), DEBUG=False, third_dimension=True)
 
 	print('Number of images to mask', len(partition['x_test']))
 
 	params = {
 			'dim': (160,256,256),
-        	'batch_size': 1,
-        	'n_channels': 1,
-        	'shuffle': False,
-            'third_dimension': True
-	     	}
+			'batch_size': 1,
+			'n_channels': 1,
+			'shuffle': False,
+			'third_dimension': True
+			}
 
 	testing_generator = DataGenerator(partition['x_test'], partition['y_test'], **params)
 	avg_time = [] 
@@ -116,7 +116,7 @@ def predict(model, validation_generator, test_set):
 
 
 def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
-        #pdb.set_trace()
+		#pdb.set_trace()
 	partition = {}
 #        print('Using checkpoint: %s'  % (checkpoint)) 
 	print('Using checkpoint %s' % checkpoint) 
@@ -124,20 +124,20 @@ def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
 	#model.load_weights('unet_3d_regression.hdfs')
 	#pdb.set_trace()
 	(_,
-	    _,
-	    partition['x_val'],
-	    partition['y_val'],
-	    _,
-	    _)  = load_data('test_set' if not validation else 'validation_set', split=(0,100,0), DEBUG=True, third_dimension=True)
+		_,
+		partition['x_val'],
+		partition['y_val'],
+		_,
+		_)  = load_data('test_set' if not validation else 'validation_set', split=(0,100,0), DEBUG=True, third_dimension=True)
 
 	print('Number of images to mask', len(partition['x_val']))
 	params = {
 		'dim': (256,320,256),
-        	'batch_size': 1,
-        	'n_channels': 1,
-        	'shuffle': False,
-                'third_dimension': True
-	     	}
+			'batch_size': 1,
+			'n_channels': 1,
+			'shuffle': False,
+				'third_dimension': True
+			}
 
 	#pdb.set_trace()
 	#pdb.set_trace()
@@ -155,35 +155,36 @@ def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
 
 def freeze_session(session, keep_var_names=None, output_names=None, clear_devices=True):
 
-    graph = session.graph
-    with graph.as_default():
-        freeze_var_names = list(set(v.op.name for v in tf.global_variables()).difference(keep_var_names or []))
-        output_names = output_names or []
-        output_names += [v.op.name for v in tf.global_variables()]
-        #pdb.set_trace()
-        input_graph_def = graph.as_graph_def()
-        if clear_devices:
-            for node in input_graph_def.node:
-                node.device = ""
-        frozen_graph = tf.graph_util.convert_variables_to_constants(
-            session, input_graph_def, output_names, freeze_var_names)
-        return frozen_graph	
+	graph = session.graph
+	with graph.as_default():
+		freeze_var_names = list(set(v.op.name for v in tf.global_variables()).difference(keep_var_names or []))
+		output_names = output_names or []
+		output_names += [v.op.name for v in tf.global_variables()]
+		#pdb.set_trace()
+		input_graph_def = graph.as_graph_def()
+		if clear_devices:
+			for node in input_graph_def.node:
+				node.device = ""
+		frozen_graph = tf.graph_util.convert_variables_to_constants(
+			session, input_graph_def, output_names, freeze_var_names)
+		return frozen_graph	
 
 
 def convert_to_pb(model_file):
 	K.clear_session()
-        #pdb.set_trace() 
+		#pdb.set_trace() 
 	model = load_model(model_file, custom_objects={'dice_coefficient': dice_coefficient})
 	
 	frozen_graph = freeze_session(K.get_session(),
-                              output_names=[out.op.name for out in model.outputs])
-        tf.train.write_graph(frozen_graph, "graphs", "best_3d_model.pb", as_text=False)
+							  output_names=[out.op.name for out in model.outputs])
+		tf.train.write_graph(frozen_graph, "graphs", "best_3d_model.pb", as_text=False)
 	print('Successfully translated keras model to tensorflow graph session!')
 
 def train(restore=False):
  
 #	K.clear_session()
 	#pdb.set_trace()
+	pdb.set_trace() 
 	partition = {}
 	#pdb.set_trace() 
 	if not restore:
@@ -199,22 +200,22 @@ def train(restore=False):
 
 	print(model.summary())
 	(partition['x_train'],
-    partition['y_train'],
-    partition['x_val'],
-    partition['y_val'],
-    partition['x_test'],
-    partition['y_test'])  = load_data('data', split=(95,5,0), DEBUG=True, third_dimension=True)
+	partition['y_train'],
+	partition['x_val'],
+	partition['y_val'],
+	partition['x_test'],
+	partition['y_test'])  = load_data('data', split=(95,5,0), DEBUG=True, third_dimension=True)
 
 
 	params = {
-		    'dim': (256,320,256),
-	            'batch_size': 1,
-	            'n_channels': 1,
-	           mshuffle': True,
-                    'third_dimension': True
-             }
+			'dim': (256,320,256),
+				'batch_size': 1,
+				'n_channels': 1,
+				'mshuffle': True,
+				'third_dimension': True
+			 }
 
-        #pdb.set_trace()
+		#pdb.set_trace()
 	training_generator = DataGenerator(partition['x_train'], partition['y_train'], **params)
 	validation_generator = DataGenerator(partition['x_val'], partition['y_val'], **params)
 #	testing_generator = DataGenerator(partition['x_test'], partition['y_test'], **params)
@@ -224,15 +225,15 @@ def train(restore=False):
 	model_checkpoint = ModelCheckpoint('unet_3d_DIFF_weighted_BCE_one_EPOCH.hdf5', monitor='loss',verbose=1, save_best_only=True)
 
 	model.fit_generator(generator=training_generator,
-                    validation_data=validation_generator,
-                    #steps_per_epoch = 1,
-                    validation_steps = 1,
-	  	    epochs=1,
-                    #max_queue_size=3,
-		    callbacks = [model_checkpoint],
-		    use_multiprocessing=True,
-		    workers=6,
-                    verbose=1)
+					validation_data=validation_generator,
+					#steps_per_epoch = 1,
+					validation_steps = 1,
+			epochs=1,
+					#max_queue_size=3,
+			callbacks = [model_checkpoint],
+			use_multiprocessing=True,
+			workers=6,
+					verbose=1)
 	model.save_weights('unet_3d_DIFF_weighted_BCE_one_EPOCH_weights.hdf5')
 
 	print('Predicting ...')
@@ -245,7 +246,7 @@ def train(restore=False):
 if __name__ == '__main__':
 	args = parser.parse_args()
  #	pdb.set_trace()
-        if args.convert_to_tensorflow:
+		if args.convert_to_tensorflow:
 		convert_to_pb(args.checkpoint)
 	elif args.validation_test:
 		evaluate(validation=True, checkpoint=args.checkpoint)
