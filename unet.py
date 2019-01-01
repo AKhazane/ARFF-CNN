@@ -21,6 +21,7 @@ def unet(inputShape=(1,None,256,256)):
     #    pdb.set_trace()
         #pdb.set_trace() 
 #        pdb.set_trace()
+        pdb.set_trace()
         inputs = Input(shape=inputShape)
 
         conv1 = Conv3D(8, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(inputs)
@@ -77,7 +78,7 @@ def unet(inputShape=(1,None,256,256)):
         conv9 = Conv3D(8, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(conv9)
         conv9 = Conv3D(2, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(conv9)
         conv10 = Conv3D(1, 1, activation = 'sigmoid', data_format='channels_first')(conv9)
-
+        pdb.set_trace()
         model = Model(input = inputs, output = conv10)
  #       model = multi_gpu_model(model, gpus=2) 
         model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['mse', 'accuracy', dice_coefficient])

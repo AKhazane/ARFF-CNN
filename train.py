@@ -153,7 +153,7 @@ def train(restore=False):
 	#pdb.set_trace()
 	partition = {}
 	if not restore:
-		model = unet.unet((1, 256, 320, 256))
+		model = unet.unet((1, None, None, None))
 #                model = multi_gpu_model(model, gpus=[0,1], cpu_merge=True, cpu_relocation=False)
 
 		print('Instantiated new 3D-Unet') 
@@ -173,7 +173,7 @@ def train(restore=False):
 
 
 	params = {
-		    'dim': (256,320,256),
+		    'dim': (128,160,128),
 	            'batch_size': 1,
 	            'n_channels': 1,
 	            'shuffle': True,
@@ -187,7 +187,7 @@ def train(restore=False):
 	print('Loaded Data')
 
 
-	model_checkpoint = ModelCheckpoint('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_fourth_epoch.hdf5', monitor='loss',verbose=1, save_best_only=True)
+	model_checkpoint = ModelCheckpoint('unet_3d_bce_correct_resampled_one_epoch.hdf5', monitor='loss',verbose=1, save_best_only=True)
 
 	model.fit_generator(generator=training_generator,
                     validation_data=validation_generator,
