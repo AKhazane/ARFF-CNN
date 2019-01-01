@@ -52,11 +52,9 @@ def dice_coefficient(y_true, y_pred, smooth=1.):
     return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
 
 
-def resample_image(img_file, target_shape):
+def resample_image(img_data, target_shape):
 
-    img = nib.load(img_file) 
-
-    img = resize_img(img, target_shape=(256,320,256), mask=False, pad=True) #resample. 
+    img = resize_img(img_data, target_shape=(256,320,256), mask=False, pad=True) #resample. 
 
     img = img.get_data() 
 
@@ -64,8 +62,10 @@ def resample_image(img_file, target_shape):
 
 
 def pre_process_image(img_file):
+ 
+    nifti_image = nib.load(img_file)
 
-    img_data = resample_image(img_file, (256,320,256)) 
+    img_data = resample_image(nifti_image, (256,320,256)) 
 
     img_data = np.squeeze(img_data.astype(np.float32))
 
@@ -106,8 +106,8 @@ if __name__ == "__main__":
 
     print('Preproessing input MRI image...')
 
+    MRI_image_shape = nib.load(MRI_image).get_data().shape
     MRI_image_data = pre_process_image(MRI_image)
-    MRI_image_shape = MRI_image_data.shape
 
     deepdeface = load_model('model.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
     pdb.set_trace()
@@ -123,9 +123,12 @@ if __name__ == "__main__":
 
     mask_prediction[mask_prediction < 0.5] = 0 
     mask_prediction[mask_prediction >= 0.5] = 1
+ 
+    mask_prediction = np.squeeze(mask_prediction) 
 
+    masked_image_save = nib.Nifti1Image(masked_prediction, nib.load(MRI_image).affine)
 
-    mask_prediction = resample_image(mask_prediction, target_shape=MRI_image_shape)
+    masked_ = resample_image(mask_prediction, target_shape=MRI_image_shape)
 
 
     masked_image = np.multiply(MRI_image_data, mask_prediction)
@@ -133,7 +136,6 @@ if __name__ == "__main__":
     print("--- %s seconds ---" % (time.time() - start_time))
 
 
-    masked_image_save = nib.Nifti1Image(masked_image, nib.load(MRI_image).affine)
 
 
     output_file = os.path.splitext(os.path.splitext(os.path.basename(MRI_image))[0])[0] + '_defaced.nii.gz'
