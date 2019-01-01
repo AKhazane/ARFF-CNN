@@ -77,7 +77,7 @@ def pre_process_image(img_file):
     max_val = np.max(img_data)
 
     norm_img_data = (img_data - min_val) / (max_val - min_val + 1e-7) 
-    return norm_img_data
+    return norm_img_data, img_data
 
 
 def get_available_gpus():
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     print('Preproessing input MRI image...')
 
     MRI_image_shape = nib.load(MRI_image).get_data().shape
-    MRI_image_data = pre_process_image(MRI_image)
+    MRI_image_data, MRI_unnormalized_data = pre_process_image(MRI_image)
 
     deepdeface = load_model('model.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
     pdb.set_trace()
@@ -126,16 +126,13 @@ if __name__ == "__main__":
  
     mask_prediction = np.squeeze(mask_prediction) 
 
-    masked_image_save = nib.Nifti1Image(masked_prediction, nib.load(MRI_image).affine)
-
-    masked_ = resample_image(mask_prediction, target_shape=MRI_image_shape)
-
-
     masked_image = np.multiply(MRI_image_data, mask_prediction)
 
     print("--- %s seconds ---" % (time.time() - start_time))
 
+    masked_image_resampled = resample_image(masked_image, target_shape=MRI_image_shape)
 
+    masked_image_save = nib.Nifti1Image(masked_image_resampled, nib.load(MRI_image).affine)
 
 
     output_file = os.path.splitext(os.path.splitext(os.path.basename(MRI_image))[0])[0] + '_defaced.nii.gz'
