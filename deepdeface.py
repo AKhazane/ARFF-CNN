@@ -52,13 +52,14 @@ def dice_coefficient(y_true, y_pred, smooth=1.):
     return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
 
 
-def resample_image(img_data, target_shape):
+def resample_image(img_data, target_shape, get_nifti=False):
 
-    img = resize_img(img_data, target_shape=(256,320,256), mask=False, pad=True) #resample. 
+    img = resize_img(img_data, target_shape=target_shape, mask=False, pad=True) #resample. 
 
-    img = img.get_data() 
+    if get_nifti:
+        return img 
 
-    return img 
+    return img.get_data()
 
 
 def pre_process_image(img_file):
@@ -67,9 +68,9 @@ def pre_process_image(img_file):
 
     img_data = resample_image(nifti_image, (256,320,256)) 
 
-    img_data = np.squeeze(img_data.astype(np.float32))
+    resamp_img = np.squeeze(img_data.astype(np.float32))
 
-    img_data = np.expand_dims(img_data, axis=0) 
+    img_data = np.expand_dims(resamp_img, axis=0) 
 
     img_data = np.expand_dims(img_data, axis=0) 
 
@@ -77,7 +78,7 @@ def pre_process_image(img_file):
     max_val = np.max(img_data)
 
     norm_img_data = (img_data - min_val) / (max_val - min_val + 1e-7) 
-    return norm_img_data, img_data
+    return norm_img_data, resamp_img
 
 
 def get_available_gpus():
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     MRI_image_data, MRI_unnormalized_data = pre_process_image(MRI_image)
 
     deepdeface = load_model('model.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
-    pdb.set_trace()
+    #pdb.set_trace()
 
     print('Masking %s ....' % (MRI_image))
 
@@ -126,21 +127,23 @@ if __name__ == "__main__":
  
     mask_prediction = np.squeeze(mask_prediction) 
 
-    masked_image = np.multiply(MRI_image_data, mask_prediction)
+    masked_image = np.multiply(MRI_unnormalized_data, mask_prediction)
 
     print("--- %s seconds ---" % (time.time() - start_time))
 
-    masked_image_resampled = resample_image(masked_image, target_shape=MRI_image_shape)
+#    masked_image_resampled = resample_image(masked_image, target_shape=MRI_image_shape)
+    pdb.set_trace()
 
-    masked_image_save = nib.Nifti1Image(masked_image_resampled, nib.load(MRI_image).affine)
-
+    masked_image_save = nib.Nifti1Image(masked_image, nib.load(MRI_image).affine)
+ 
+    masked_image_resampled = resample_image(masked_image_save, target_shape=MRI_image_shape, get_nifti=True)
 
     output_file = os.path.splitext(os.path.splitext(os.path.basename(MRI_image))[0])[0] + '_defaced.nii.gz'
 
 
     print('Completed! Saving to %s...' % (output_file))
 
-    nib.save(masked_image_save, output_file)
+    nib.save(masked_image_resampled, output_file)
 
     print('Done.') 
 

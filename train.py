@@ -185,7 +185,7 @@ def train(restore=False):
 	#pdb.set_trace()
 	partition = {}
 	if not restore:
-		model = unet.unet((1, 256, 320, 256))
+		model = unet.unet((1, 256, 256, 144))
 #                model = multi_gpu_model(model, gpus=[0,1], cpu_merge=True, cpu_relocation=False)
 
 		print('Instantiated new 3D-Unet') 
