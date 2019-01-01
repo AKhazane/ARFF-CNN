@@ -9,7 +9,7 @@ import time
 
 
 from keras import backend as K
-from keras.models import 
+from keras.models import *
 from tensorflow.python.client import device_lib
 from nilearn.image import resample_img
 
@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    pdb.set_trace()
+#    pdb.set_trace()
     if not args.input_file:
         print('Please specify the path of a MRI image for defacing.')
         sys.exit()
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     MRI_image_data = pre_process_image(MRI_image)
 
     deepdeface = load_model('model.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
-
+    pdb.set_trace()
 
     print('Masking %s ....' % (MRI_image))
 
