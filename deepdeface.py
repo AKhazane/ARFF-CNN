@@ -11,7 +11,37 @@ import time
 from keras import backend as K
 from keras.models import 
 from tensorflow.python.client import device_lib
+from nilearn.image import resample_img
 
+
+
+def resize_img(img,target_shape,mask=False, pad=False):
+    ''' Resample image to specified target shape '''
+    # Define interpolation method
+    interp = 'nearest' if mask else 'continuous'
+    if not pad:
+        # Define resolution
+        img_shape = np.array(img.shape[:3])
+        target_shape = np.array(target_shape)
+        res = img_shape/target_shape
+        # Define target affine matrix
+        new_affine = np.zeros((4,4))
+        new_affine[:3,:3] = np.diag(res)
+        new_affine[:3,3] = target_shape*res/2.*-1
+
+        new_affine[3,3] = 1.
+        
+        # Resample image w. defined parameters
+        reshaped_img = resample_img(img,
+                                    target_affine=new_affine,
+                                    target_shape=target_shape,
+                                    interpolation=interp)
+    else: # padded/cropped image
+        reshaped_img = resample_img(img, 
+                                    target_affine=img.affine,
+                                    target_shape=target_shape,
+                                    interpolation=interp)
+    return reshaped_img
 
 ''' Dice Coefficient Metric '''
 def dice_coefficient(y_true, y_pred, smooth=1.):
@@ -23,7 +53,13 @@ def dice_coefficient(y_true, y_pred, smooth=1.):
 
 def pre_process_image(img_file):
 
-    img_data = np.squeeze(nib.load(img_file).get_data().astype(np.float32))
+    img = nib.load(img_file) 
+
+    img = resize_img(img, target_shape=(256,320,256), mask=False, pad=True) #resample. 
+
+    img_data = img.get_data() 
+
+    img_data = np.squeeze(img_data.astype(np.float32))
 
     img_data = np.expand_dims(img_data, axis=0) 
 
