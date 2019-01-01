@@ -51,13 +51,21 @@ def dice_coefficient(y_true, y_pred, smooth=1.):
 
     return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
 
-def pre_process_image(img_file):
+
+def resample_image(img_file, target_shape):
 
     img = nib.load(img_file) 
 
     img = resize_img(img, target_shape=(256,320,256), mask=False, pad=True) #resample. 
 
-    img_data = img.get_data() 
+    img = img.get_data() 
+
+    return img 
+
+
+def pre_process_image(img_file):
+
+    img_data = resample_image(img_file, (256,320,256)) 
 
     img_data = np.squeeze(img_data.astype(np.float32))
 
@@ -69,7 +77,7 @@ def pre_process_image(img_file):
     max_val = np.max(img_data)
 
     norm_img_data = (img_data - min_val) / (max_val - min_val + 1e-7) 
-    return norm_img_data 
+    return norm_img_data
 
 
 def get_available_gpus():
@@ -99,6 +107,7 @@ if __name__ == "__main__":
     print('Preproessing input MRI image...')
 
     MRI_image_data = pre_process_image(MRI_image)
+    MRI_image_shape = MRI_image_data.shape
 
     deepdeface = load_model('model.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
 
@@ -114,6 +123,9 @@ if __name__ == "__main__":
 
     mask_prediction[mask_prediction < 0.5] = 0 
     mask_prediction[mask_prediction >= 0.5] = 1
+
+
+    mask_prediction = resample_image(mask_prediction, target_shape=MRI_image_shape)
 
 
     masked_image = np.multiply(MRI_image_data, mask_prediction)
