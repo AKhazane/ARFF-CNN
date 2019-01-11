@@ -15,7 +15,7 @@ import nibabel as nib
 import pdb
 
 
-def unet(inputShape=(1,None,256,256), custom_loss=True):
+def unet(inputShape=(1,None,256,256)):
        
     # paddedShape = (data_ch.shape[1]+2, data_ch.shape[2]+2, data_ch.shape[3]+2, data_ch.shape[4])
 
@@ -84,10 +84,6 @@ def unet(inputShape=(1,None,256,256), custom_loss=True):
         model = Model(input = inputs, output = conv10)
 
         chosen_loss = bce
-        if custom_loss:
-            weights = [2, 1]
-            chosen_loss = weightedLoss(bce, weights)
-
  #       model = multi_gpu_model(model, gpus=2) 
         model.compile(optimizer = Adam(lr = 1e-4), loss = chosen_loss, metrics = ['mse', 'accuracy', dice_coefficient])
 #        model.compile(optimizer = keras.optimizers.SGD(lr = 1e-12, decay=1e-6, nesterov=True, momentum=0.9), loss = 'mse', metrics = ['mse', dice_coefficient])

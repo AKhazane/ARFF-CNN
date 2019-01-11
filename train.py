@@ -189,13 +189,12 @@ def train(restore=False):
     partition = {}
     #pdb.set_trace() 
     if not restore:
-        model = unet.unet((1, 256, 320, 256))
-#                model = multi_gpu_model(model, gpus=[0,1], cpu_merge=True, cpu_relocation=False)
+        model = unet.unet((1, 160, 160, 160))
 
         print('Instantiated new 3D-Unet') 
 
     if restore:
-        model = load_model('unet_3d_weighted_BCE_ONE_EPOCH.hdf5', custom_objects={'dice_coefficient': dice_coefficient, 'lossFunc': weightedLoss(bce, [2,1])}) 
+        model = load_model('unet_3d_weighted_BCE_ONE_EPOCH.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
         #model.load_weights('unet_3d_binary_cross_entropy.hdfs')
         print('Restored 3D-Unet from latest HDF5 file.')  
 
@@ -209,7 +208,7 @@ def train(restore=False):
 
 
     params = {
-            'dim': (256,320,256),
+            'dim': (160,160,160),
                 'batch_size': 1,
                 'n_channels': 1,
                 'mshuffle': True,
@@ -223,7 +222,7 @@ def train(restore=False):
     print('Loaded Data')
 
 
-    model_checkpoint = ModelCheckpoint('unet_3d_DIFF_weighted_BCE_one_EPOCH.hdf5', monitor='loss',verbose=1, save_best_only=True)
+    model_checkpoint = ModelCheckpoint('unet_3d_resampled_approach_epoch_one.hdf5', monitor='loss',verbose=1, save_best_only=True)
 
     model.fit_generator(generator=training_generator,
                     validation_data=validation_generator,
@@ -235,7 +234,7 @@ def train(restore=False):
             use_multiprocessing=True,
             workers=6,
                     verbose=1)
-    model.save_weights('unet_3d_DIFF_weighted_BCE_one_EPOCH_weights.hdf5')
+    model.save_weights('unet_3d_resampled_approach_epoch_one.hdf5')
 
     print('Predicting ...')
     predict(model, validation_generator, partition['y_val'])
