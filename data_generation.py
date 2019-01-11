@@ -66,11 +66,46 @@ class DataGenerator(keras.utils.Sequence):
         #new_image[:image.shape[0], :image.shape[1], :image.shape[2]] = image 
         return img
 
- #    def create_mask(self, norm, defaced):
-	# output = defaced.copy() - norm.copy() 
-	# output[output < 0] = 0 
-	# output[output > 0] = 1 
-	# return output
+
+    def resample_image(nifti_img, specified_shape):
+
+        img = sitk.ReadImage(nifti_img)
+        img_data = sitk.GetArrayFromImage(img)
+
+        shape = img_data.shape
+        dimension = img.GetDimension() 
+        target_shape = specified_shape
+
+        reference_physical_size = np.zeros(dimension)
+        reference_physical_size[:] = [(sz-1)*spc if sz*spc>mx  else mx for sz,spc,mx in zip(img.GetSize(), img.GetSpacing(), reference_physical_size)]
+
+        reference_origin = np.zeros(dimension)
+        reference_direction = np.identity(dimension).flatten()
+        reference_size = specified_shape # Arbitrary sizes, smallest size that yields desired results. 
+        reference_spacing = [ phys_sz/(sz-1) for sz,phys_sz in zip(reference_size, reference_physical_size)]
+
+        reference_image = sitk.Image(reference_size, img.GetPixelIDValue())
+        reference_image.SetOrigin(reference_origin)
+        reference_image.SetSpacing(reference_spacing)
+        reference_image.SetDirection(reference_direction)
+
+        reference_center = np.array(reference_image.TransformContinuousIndexToPhysicalPoint(np.array(reference_image.GetSize())/2.0))
+
+        transform = sitk.AffineTransform(dimension)
+        transform.SetMatrix(img.GetDirection())
+        transform.SetTranslation(np.array(img.GetOrigin()) - reference_origin)
+        # Modify the transformation to align the centers of the original and reference image instead of their origins.
+        centering_transform = sitk.TranslationTransform(dimension)
+        img_center = np.array(img.TransformContinuousIndexToPhysicalPoint(np.array(img.GetSize())/2.0))
+        centering_transform.SetOffset(np.array(transform.GetInverse().TransformPoint(img_center) - reference_center))
+        centered_transform = sitk.Transform(transform)
+        centered_transform.AddTransform(centering_transform)
+
+        resampled_img_data = sitk.Resample(img, reference_image, centered_transform, sitk.sitkLinear, 0.0)
+        resampled_img_data = np.swapaxes(sitk.GetArrayFromImage(resampled_img_data), 0, -1) 
+
+        return resampled_img_data
+
     
     def getMaskData(self, normal, defaced):
         normalized_norm = ((normal - np.min(defaced))/
@@ -120,10 +155,13 @@ class DataGenerator(keras.utils.Sequence):
                 #pdb.set_trace() 
                  
                 # Augment incoming training data according to self.augmentors 
-#                x_data = np.expand_dims(np.squeeze(nib.load(ID).get_data().astype(np.float32)), axis=0) 
+#                x_data = np.expand_dims(np.squeeze(nib.load(ID).get_data().astype(np.float32)), axis=0)
 #                y_data = np.expand_dims(np.squeeze(nib.load(list_ys_temp[i]).get_data().astype(np.float32)), axis=0)
-                raw_x, raw_y = self.data_augmentation(np.squeeze(nib.load(ID).get_data().astype(np.float32)), np.squeeze(nib.load(list_ys_temp[i]).get_data().astype(np.float32)))
-                x_data = np.expand_dims(raw_x, axis=0) 
+                raw_x, raw_y = np.squeeze(resample_image(ID, (160,160,160))).astype(np.float32), np.squeeze(resample_image(list_ys_temp[i], (160,160,160))).astype(np.float32)
+
+                raw_x, raw_y = self.data_augmentation(raw_x, raw_y)
+
+                x_data = np.expand_dims(raw_x, axis=0)
                 y_data = np.expand_dims(raw_y, axis=0)
 #                x_data = self.resize_image(x_data) 
 #                y_data = self.resize_image(y_data) 
