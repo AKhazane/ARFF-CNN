@@ -21,7 +21,7 @@ def unet(inputShape=(1,None,256,256)):
     #    pdb.set_trace()
         #pdb.set_trace() 
 #        pdb.set_trace()
-        pdb.set_trace()
+#        pdb.set_trace()
         inputs = Input(shape=inputShape)
 
         conv1 = Conv3D(8, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(inputs)

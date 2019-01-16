@@ -152,15 +152,19 @@ def train(restore=False):
 	K.clear_session()
 	#pdb.set_trace()
 	partition = {}
+        pdb.set_trace() 
 	if not restore:
-		model = unet.unet((1, None, None, None))
+		new_model = unet.unet((1, None, None, None))
+                old_model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5',custom_objects={'dice_coefficient': dice_coefficient}) 
+                new_model.set_weights(old_model.get_weights()) 
+                new_model.save('model.hdf5') 
 #                model = multi_gpu_model(model, gpus=[0,1], cpu_merge=True, cpu_relocation=False)
 
 		print('Instantiated new 3D-Unet') 
 
 	if restore:
-		model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
-		#model.load_weights('unet_3d_binary_cross_entropy.hdfs')
+		old_model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
+                #model.load_weights('unet_3d_binary_cross_entropy.hdfs')
 		print('Restored 3D-Unet from latest HDF5 file.')  
 
 	print(model.summary())
