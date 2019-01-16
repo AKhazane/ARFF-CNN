@@ -7,6 +7,8 @@ from keras.optimizers import Adam
 #from keras.utils import multi_gpu_model
 #from helper import create_convolution_block, concatenate
 from metrics import dice_coefficient
+from losses import weightedLoss
+from keras.backend import binary_crossentropy as bce
 # import numpy as np
 import tensorflow as tf 
 import nibabel as nib
@@ -78,10 +80,11 @@ def unet(inputShape=(1,None,256,256)):
         conv9 = Conv3D(8, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(conv9)
         conv9 = Conv3D(2, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal', data_format='channels_first')(conv9)
         conv10 = Conv3D(1, 1, activation = 'sigmoid', data_format='channels_first')(conv9)
-        pdb.set_trace()
         model = Model(input = inputs, output = conv10)
+
+        chosen_loss = bce
  #       model = multi_gpu_model(model, gpus=2) 
-        model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['mse', 'accuracy', dice_coefficient])
+        model.compile(optimizer = Adam(lr = 1e-4), loss = chosen_loss, metrics = ['mse', 'accuracy', dice_coefficient])
 #        model.compile(optimizer = keras.optimizers.SGD(lr = 1e-12, decay=1e-6, nesterov=True, momentum=0.9), loss = 'mse', metrics = ['mse', dice_coefficient])
  #       model = multi_gpu_model(model, gpus=[0,1], cpu_merge=True, cpu_relocation=False)        
         return model
