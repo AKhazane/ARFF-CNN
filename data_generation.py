@@ -10,6 +10,7 @@ from random import randint
 import skimage as sk
 from skimage import transform 
 from skimage import util 
+import SimpleITK as sitk
 
 
 
@@ -46,11 +47,11 @@ class DataGenerator(keras.utils.Sequence):
 
     def data_augmentation(self, x, y):
         choice = randint(0, 2) 
-        if choice == 0:
+        if choice == 3:
 #            random_degree = random.uniform(-75, 75)
             x = np.flipud(x)
             y = np.flipud(y)
-        elif choice == 1:
+        elif choice == 4:
             x = np.fliplr(x) 
             y = np.fliplr(y)
         return x,y 
@@ -67,7 +68,7 @@ class DataGenerator(keras.utils.Sequence):
         return img
 
 
-    def resample_image(nifti_img, specified_shape):
+    def resample_image(self,nifti_img, specified_shape):
 
         img = sitk.ReadImage(nifti_img)
         img_data = sitk.GetArrayFromImage(img)
@@ -157,7 +158,7 @@ class DataGenerator(keras.utils.Sequence):
                 # Augment incoming training data according to self.augmentors 
 #                x_data = np.expand_dims(np.squeeze(nib.load(ID).get_data().astype(np.float32)), axis=0)
 #                y_data = np.expand_dims(np.squeeze(nib.load(list_ys_temp[i]).get_data().astype(np.float32)), axis=0)
-                raw_x, raw_y = np.squeeze(resample_image(ID, (160,160,160))).astype(np.float32), np.squeeze(resample_image(list_ys_temp[i], (160,160,160))).astype(np.float32)
+                raw_x, raw_y = np.squeeze(self.resample_image(ID, (160,160,160))).astype(np.float32), np.squeeze(self.resample_image(list_ys_temp[i], (160,160,160))).astype(np.float32)
 
                 raw_x, raw_y = self.data_augmentation(raw_x, raw_y)
 

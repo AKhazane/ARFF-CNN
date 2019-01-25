@@ -11,7 +11,6 @@ import nibabel as nib
 import pdb 
 import tensorflow as tf
 from metrics import dice_coefficient
-from losses import weightedLoss
 import argparse
 import time
 from keras.backend import binary_crossentropy as bce
@@ -119,9 +118,12 @@ def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
         K.clear_session()
         #pdb.set_trace()
         partition = {}
-#        print('Using checkpoint: %s'  % (checkpoint)) 
+#        print('Using checkpoint: %s'  % (checkpoint))
         print('Using checkpoint %s' % checkpoint) 
-        model = load_model('unet_3d_bse_ONE_EPOCH_JUST_data_augmentation_third_epoch.hdf5', custom_objects={'dice_coefficient': dice_coefficient}) 
+        model = unet.unet((1, 160, 160, 160))
+        model.load_weights('unet_3d_resampled_approach_epoch_three.hdf5') 
+
+#        model = load_model('unet_3d_resampled_approach_epoch_three.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
     #model.load_weights('unet_3d_regression.hdfs')
     #pdb.set_trace()
         (_,
@@ -133,7 +135,7 @@ def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
 
         print('Number of images to mask', len(partition['x_val']))
         params = {
-        'dim': (256,320,256),
+        'dim': (160,160,160),
             'batch_size': 1,
             'n_channels': 1,
             'shuffle': False,
@@ -148,7 +150,7 @@ def evaluate(validation=True, checkpoint='unet_3d_bse.hdf5'):
                 print('dealing with file', validation_generator.list_IDs[index])
                 predicted_mask = model.predict_on_batch(x=x_batch)
                 if validation:
-                        save_prediction([partition['y_val'][index]], predicted_mask, 'validation_predictions/')
+                        save_prediction([partition['y_val'][index]], predicted_mask, 'validation_predictions2/')
                 else:
                         save_prediction([partition['y_val'][index]], predicted_mask, 'test_predictions/')
 
@@ -171,20 +173,10 @@ def freeze_session(session, keep_var_names=None, output_names=None, clear_device
         return frozen_graph 
 
 
-def convert_to_pb(model_file):
-    K.clear_session()
-        #pdb.set_trace() 
-    model = load_model(model_file, custom_objects={'dice_coefficient': dice_coefficient})
-    
-    frozen_graph = freeze_session(K.get_session(),
-                              output_names=[out.op.name for out in model.outputs])
-        tf.train.write_graph(frozen_graph, "graphs", "best_3d_model.pb", as_text=False)
-    print('Successfully translated keras model to tensorflow graph session!')
 
 def train(restore=False):
  
     #pdb.set_trace()
-    pdb.set_trace() 
     partition = {}
     #pdb.set_trace() 
     if not restore:
@@ -193,7 +185,9 @@ def train(restore=False):
         print('Instantiated new 3D-Unet') 
 
     if restore:
-        model = load_model('unet_3d_weighted_BCE_ONE_EPOCH.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
+#        model = load_model('/home/akhazane/Project/ARFF-CNN/unet_3d_resampled_approach_epoch_one.hdf5', custom_objects={'dice_coefficient': dice_coefficient})
+        model = unet.unet((1,160,160,160))
+        model.load_weights('unet_3d_resampled_approach_epoch_three.hdf5')
         #model.load_weights('unet_3d_binary_cross_entropy.hdfs')
         print('Restored 3D-Unet from latest HDF5 file.')  
 
@@ -207,10 +201,10 @@ def train(restore=False):
 
 
     params = {
-               'dim': (160,160,160),
+                'dim': (160,160,160),
                 'batch_size': 1,
                 'n_channels': 1,
-                'mshuffle': True,
+                'shuffle': True,
                 'third_dimension': True
              }
 
@@ -221,7 +215,7 @@ def train(restore=False):
     print('Loaded Data')
 
 
-    model_checkpoint = ModelCheckpoint('unet_3d_resampled_approach_epoch_one.hdf5', monitor='loss',verbose=1, save_best_only=True)
+    model_checkpoint = ModelCheckpoint('unet_3d_resampled_approach_epoch_four.hdf5', monitor='loss',verbose=1, save_best_only=True)
 
     model.fit_generator(generator=training_generator,
                     validation_data=validation_generator,
@@ -231,13 +225,14 @@ def train(restore=False):
                     #max_queue_size=3,
             callbacks = [model_checkpoint],
             use_multiprocessing=True,
-            workers=6,
+            workers=2,
                     verbose=1)
-    model.save_weights('unet_3d_resampled_approach_epoch_one.hdf5')
+    model.save('unet_3d_resampled_approach_epoch_four.hdf5')
 
     print('Predicting ...')
-    predict(model, validation_generator, partition['y_val'])
-#
+    #predict(model, validation_generator, partition['y_val'])
+
+    #os.system('sudo shutdown -P +15')
 
 
 
@@ -245,13 +240,19 @@ def train(restore=False):
 if __name__ == '__main__':
     args = parser.parse_args()
  #  pdb.set_trace()
-        if args.convert_to_tensorflow:
-        convert_to_pb(args.checkpoint)
-    elif args.validation_test:
+    if args.validation_test:
         evaluate(validation=True, checkpoint=args.checkpoint)
     elif args.test:
         evaluate(validation=False, checkpoint=args.checkpoint) 
     elif args.restore:
         train(True) 
+        
     else:
-        train() 
+        try:
+            train()
+            os.system('sudo shutdown -P +15')
+        except Exception as e:
+            print(e) 
+        
+            print('Shieeet')
+            os.system('sudo shutdown -P +15')
