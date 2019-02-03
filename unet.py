@@ -7,7 +7,6 @@ from keras.optimizers import Adam
 #from keras.utils import multi_gpu_model
 #from helper import create_convolution_block, concatenate
 from metrics import dice_coefficient
-from losses import weightedLoss
 from keras.backend import binary_crossentropy as bce
 # import numpy as np
 import tensorflow as tf 

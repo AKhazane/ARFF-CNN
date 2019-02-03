@@ -10,7 +10,8 @@ from random import randint
 import skimage as sk
 from skimage import transform 
 from skimage import util 
-
+import SimpleITK as sitk
+import sys
 
 
 class DataGenerator(keras.utils.Sequence):
@@ -67,7 +68,7 @@ class DataGenerator(keras.utils.Sequence):
         return img
 
 
-    def resample_image(nifti_img, specified_shape):
+    def resample_image(self, nifti_img, specified_shape):
 
         img = sitk.ReadImage(nifti_img)
         img_data = sitk.GetArrayFromImage(img)
@@ -157,9 +158,13 @@ class DataGenerator(keras.utils.Sequence):
                 # Augment incoming training data according to self.augmentors 
 #                x_data = np.expand_dims(np.squeeze(nib.load(ID).get_data().astype(np.float32)), axis=0)
 #                y_data = np.expand_dims(np.squeeze(nib.load(list_ys_temp[i]).get_data().astype(np.float32)), axis=0)
-                raw_x, raw_y = np.squeeze(resample_image(ID, (160,160,160))).astype(np.float32), np.squeeze(resample_image(list_ys_temp[i], (160,160,160))).astype(np.float32)
-
+                raw_x, raw_y = np.squeeze(self.resample_image(ID, (160,160,160))).astype(np.float32), np.squeeze(self.resample_image(list_ys_temp[i], (160,160,160))).astype(np.float32)
                 raw_x, raw_y = self.data_augmentation(raw_x, raw_y)
+
+#                nib.Nifti1Image(raw_x, np.eye(4)).to_filename('testing_resample.nii.gz')
+#                nib.Nifti1Image(raw_y, np.eye(4)).to_filename('testing_resample_mask.nii.gz')
+#                sys.exit(1)
+#                raw_x, raw_y = self.data_augmentation(raw_x, raw_y)
 
                 x_data = np.expand_dims(raw_x, axis=0)
                 y_data = np.expand_dims(raw_y, axis=0)
